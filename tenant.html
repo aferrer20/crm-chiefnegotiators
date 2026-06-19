@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  *, *::before, *::after { box-sizing:border-box; }
+  html, body { margin:0; padding:0; background:#F3EDE3; }
+  #cnt { --cn-black:#F3EDE3; --cn-black-95:#FFFFFF; --cn-gold:#9A5E2E; --cn-gold-bright:#7E4A22; --cn-gold-dim:#C4A079; --cn-gold-tint-12:rgba(154,94,46,0.10); --cn-gold-tint-24:rgba(154,94,46,0.24); --cn-surface:#FBF8F2; --cn-surface-hover:#F2E9D9; --cn-surface-edge:#DBD0BD; --cn-fg:#211A12; --cn-fg-muted:#463B2E; --cn-fg-subtle:#6B5E4F; --cn-fg-faint:#9E9079; --cn-band:#17120F; --cn-band-gold:#CBA078; --cn-band-fg:#E9DFD1; --cn-ease:cubic-bezier(0.22,0.61,0.36,1); --cn-font-display:'Libre Franklin',system-ui,-apple-system,'Segoe UI',sans-serif; --cn-font-body:'Libre Franklin',system-ui,-apple-system,'Segoe UI',sans-serif; }
+  #cnt a { color:inherit; text-decoration:none; }
+  #cnt label { display:block; }
+  #cnt [data-l] { display:block; font-family:var(--cn-font-body); font-size:16px; font-weight:700; letter-spacing:0.02em; text-transform:uppercase; color:var(--cn-fg); margin-bottom:9px; }
+  #cnt input[type="text"], #cnt input[type="email"], #cnt input[type="tel"], #cnt input[type="number"], #cnt input[type="date"], #cnt select, #cnt textarea { width:100%; font-family:var(--cn-font-body); font-size:18px; color:var(--cn-fg); background:var(--cn-black-95); border:1px solid var(--cn-surface-edge); border-radius:0; padding:14px 16px; outline:none; transition:border-color 200ms var(--cn-ease); -webkit-appearance:none; appearance:none; }
+  #cnt textarea { resize:vertical; min-height:92px; line-height:1.6; }
+  #cnt input:focus, #cnt select:focus, #cnt textarea:focus { border-color:var(--cn-gold); }
+  #cnt input::placeholder, #cnt textarea::placeholder { color:var(--cn-fg-faint); }
+  #cnt select { background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%239A5E2E' stroke-width='1.5'/></svg>"); background-repeat:no-repeat; background-position:right 15px center; padding-right:40px; cursor:pointer; }
+  #cnt select option { background:#FFFFFF; color:var(--cn-fg); }
+  #cnt input[type="checkbox"] { width:19px; height:19px; -webkit-appearance:auto; appearance:auto; accent-color:var(--cn-gold); cursor:pointer; flex:none; }
+  #cnt a { text-decoration:none; }
+  @media (max-width:600px){
+    #cnt header { padding:18px 20px !important; gap:12px !important; }
+    #cnt header img { height:64px !important; }
+    #cnt header > div { text-align:left !important; }
+    #cnt main { padding-left:20px !important; padding-right:20px !important; }
+    #cnt [data-progress] { padding-left:20px !important; padding-right:20px !important; }
+    #cnt [data-section-title] { font-size:28px !important; }
+    #cnt [data-yesno] { flex-direction:column !important; align-items:stretch !important; gap:10px !important; }
+    #cnt [data-yesno] select { width:100% !important; }
+  }
+</style>
+</helmet>
+<div id="cnt" style="min-height:100vh; background:var(--cn-black); color:var(--cn-fg-muted); font-family:var(--cn-font-body); line-height:1.55;">
+
+  <!-- ===== FORM ===== -->
+  <div style="display:{{ formDisplay }};">
+    <header style="border-bottom:1px solid var(--cn-gold-tint-24); padding:22px 40px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;">
+      <img src="assets/logo-light.png" alt="The Chief Negotiators" style="height:96px; width:auto; display:block;">
+      <div style="text-align:right;">
+        <div style="font-family:var(--cn-font-display); font-size:13px; font-weight:600; letter-spacing:0.16em; text-transform:uppercase; color:var(--cn-gold);">Compute Capacity &middot; Deal Qualification</div>
+        <div style="font-family:var(--cn-font-body); font-size:14px; color:var(--cn-fg-subtle); margin-top:5px;">Confidential &mdash; an early-stage qualification, not an offer of allocation or supply.</div>
+      </div>
+    </header>
+
+    <div data-progress style="padding:36px 40px 0; max-width:780px; margin:0 auto; width:100%;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px;">
+        <span style="font-family:var(--cn-font-display); font-size:12px; font-weight:600; letter-spacing:0.16em; text-transform:uppercase; color:var(--cn-fg-subtle);">Section {{ stepNum }} of {{ stepCount }}</span>
+        <span style="font-family:var(--cn-font-display); font-size:12px; font-weight:600; letter-spacing:0.16em; text-transform:uppercase; color:var(--cn-gold);">Tenant Qualification</span>
+      </div>
+      <div style="height:2px; background:var(--cn-surface-edge); width:100%;"><div style="height:2px; background:var(--cn-gold); width:{{ pct }}%; transition:width 300ms var(--cn-ease);"></div></div>
+      <div data-section-title style="font-family:var(--cn-font-display); font-size:38px; font-weight:700; color:var(--cn-fg); letter-spacing:-0.01em; margin-top:24px; line-height:1.1;">{{ sectionTitle }}</div>
+      <div style="font-family:var(--cn-font-body); color:var(--cn-fg-subtle); font-size:18px; margin-top:12px; max-width:660px; line-height:1.6;">{{ sectionIntro }}</div>
+    </div>
+
+    <main style="max-width:780px; margin:0 auto; padding:28px 40px 44px; width:100%;">
+      <sc-for list="{{ currentFields }}" as="fld" hint-placeholder-count="6">
+        <div style="{{ fld.wrapStyle }}">
+          <sc-if value="{{ fld.isSubhead }}" hint-placeholder-val="{{ false }}"><div style="font-family:var(--cn-font-display); font-size:13px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--cn-fg-subtle); border-bottom:1px solid var(--cn-gold-tint-24); padding-bottom:8px;">{{ fld.label }}</div></sc-if>
+          <sc-if value="{{ fld.isNote }}" hint-placeholder-val="{{ false }}"><div style="font-family:var(--cn-font-body); font-size:15px; color:var(--cn-fg-subtle); line-height:1.65; border-left:2px solid var(--cn-gold-tint-24); padding-left:15px;">{{ fld.label }}</div></sc-if>
+          <sc-if value="{{ fld.isText }}" hint-placeholder-val="{{ false }}"><label><span data-l>{{ fld.label }}</span><input type="text" value="{{ fld.value }}" onChange="{{ fld.onInput }}" placeholder="{{ fld.placeholder }}"></label></sc-if>
+          <sc-if value="{{ fld.isArea }}" hint-placeholder-val="{{ false }}"><label><span data-l>{{ fld.label }}</span><textarea value="{{ fld.value }}" onChange="{{ fld.onInput }}" placeholder="{{ fld.placeholder }}"></textarea></label></sc-if>
+          <sc-if value="{{ fld.isDate }}" hint-placeholder-val="{{ false }}"><label><span data-l>{{ fld.label }}</span><input type="date" value="{{ fld.value }}" onChange="{{ fld.onInput }}"></label></sc-if>
+          <sc-if value="{{ fld.isSelect }}" hint-placeholder-val="{{ false }}"><label><span data-l>{{ fld.label }}</span><select value="{{ fld.value }}" onChange="{{ fld.onInput }}"><option value="">Select...</option><sc-for list="{{ fld.options }}" as="op"><option value="{{ op.v }}">{{ op.l }}</option></sc-for></select></label></sc-if>
+          <sc-if value="{{ fld.isYesno }}" hint-placeholder-val="{{ false }}">
+            <div data-yesno style="display:flex; align-items:flex-start; justify-content:space-between; gap:24px; border-bottom:1px solid var(--cn-gold-tint-24); padding-bottom:16px;">
+              <div style="font-family:var(--cn-font-body); font-size:18px; color:var(--cn-fg-muted); line-height:1.55; flex:1;">{{ fld.label }}</div>
+              <select value="{{ fld.value }}" onChange="{{ fld.onInput }}" style="width:128px; flex:none;"><option value="">&mdash;</option><option value="No">No</option><option value="Yes">Yes</option></select>
+            </div>
+          </sc-if>
+          <sc-if value="{{ fld.isMulti }}" hint-placeholder-val="{{ false }}">
+            <span data-l>{{ fld.label }}</span>
+            <div style="display:flex; flex-wrap:wrap; gap:11px 14px;">
+              <sc-for list="{{ fld.options }}" as="op">
+                <label style="display:flex; align-items:center; gap:10px; padding:11px 16px; border:1px solid var(--cn-surface-edge); background:var(--cn-black-95); cursor:pointer; font-family:var(--cn-font-body); font-size:16px; color:var(--cn-fg-muted);"><input type="checkbox" checked="{{ op.checked }}" onChange="{{ op.toggle }}">{{ op.label }}</label>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ fld.isAgree }}" hint-placeholder-val="{{ false }}">
+            <label style="display:flex; gap:15px; align-items:flex-start; border:1px solid var(--cn-gold-tint-24); background:var(--cn-surface); padding:18px 20px; cursor:pointer;"><input type="checkbox" checked="{{ fld.checked }}" onChange="{{ fld.onToggle }}" style="margin-top:3px;"><span style="font-family:var(--cn-font-body); font-size:18px; color:var(--cn-fg-muted); line-height:1.6;">{{ fld.label }}</span></label>
+          </sc-if>
+          <sc-if value="{{ fld.hasHint }}" hint-placeholder-val="{{ false }}"><div style="font-family:var(--cn-font-body); font-size:16px; color:var(--cn-fg-subtle); line-height:1.6; margin-top:8px;">{{ fld.hint }}</div></sc-if>
+        </div>
+      </sc-for>
+
+      <div style="display:{{ errDisplay }}; margin-top:20px; border:1px solid var(--cn-gold); background:var(--cn-gold-tint-12); padding:13px 17px; font-family:var(--cn-font-body); color:var(--cn-gold-bright); font-size:15px;">{{ errMsg }}</div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:34px;">
+        <button onClick="{{ back }}" style="background:none; border:1px solid var(--cn-surface-edge); color:var(--cn-fg-muted); font-family:var(--cn-font-display); font-size:13px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; padding:14px 28px; cursor:pointer;" style-hover="border-color:var(--cn-gold); color:var(--cn-gold);">{{ backLabel }}</button>
+        <div style="flex:1;"></div>
+        <button onClick="{{ next }}" style="display:{{ nextDisplay }}; background:var(--cn-gold); border:1px solid var(--cn-gold); color:#FFFFFF; font-family:var(--cn-font-display); font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; padding:14px 32px; cursor:pointer;" style-hover="background:var(--cn-gold-bright); border-color:var(--cn-gold-bright);">Continue</button>
+        <button onClick="{{ submit }}" disabled="{{ submitting }}" style="display:{{ submitDisplay }}; opacity:{{ submitOpacity }}; background:var(--cn-gold); border:1px solid var(--cn-gold); color:#FFFFFF; font-family:var(--cn-font-display); font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; padding:14px 32px; cursor:pointer;" style-hover="background:var(--cn-gold-bright); border-color:var(--cn-gold-bright);">{{ submitLabel }}</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== CONFIRM ===== -->
+  <div style="display:{{ confirmDisplay }}; min-height:100vh; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:48px 32px;">
+    <img src="assets/logo-light.png" alt="The Chief Negotiators" style="height:96px; width:auto; margin-bottom:44px;">
+    <div style="font-family:var(--cn-font-display); font-size:12px; font-weight:600; letter-spacing:0.16em; text-transform:uppercase; color:var(--cn-gold); margin-bottom:18px;">Submission Received</div>
+    <h1 style="font-family:var(--cn-font-display); font-size:46px; font-weight:700; color:var(--cn-fg); margin:0 0 22px; letter-spacing:-0.01em; line-height:1.12; max-width:660px;">Your opportunity is with our team.</h1>
+    <p style="font-family:var(--cn-font-body); font-size:19px; color:var(--cn-fg-muted); line-height:1.7; max-width:580px; margin:0 0 14px;">Thank you. We will assess the fit confidentially and come back to you with a focused set of next steps.</p>
+    <p style="font-family:var(--cn-font-body); font-size:16px; color:var(--cn-fg-subtle); line-height:1.7; max-width:540px; margin:0;">Nothing is shared with any counterparty until the opportunity is qualified and you have agreed to proceed.</p>
+    <div style="margin-top:44px; font-family:var(--cn-font-display); font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cn-fg-faint);">Reference: {{ refCode }}</div>
+    <div style="margin-top:30px;"><a href="index.html" style="font-family:var(--cn-font-display); font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--cn-fg-faint);" style-hover="color:var(--cn-gold);">&#8592; Back to start</a></div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    this.state = { view:'form', step:0, fields:{}, submitting:false, errMsg:'', refCode:'' };
+    this.ENDPOINT = 'https://api.web3forms.com/submit';
+    this.ACCESS_KEY = '7f1ff338-3ebd-4053-8253-76e5e1a5f40e';
+  }
+
+  schema(){ return [
+    { title:'Your Details & Off-taker', intro:'', fields:[
+      { t:'subhead', l:'Held in Confidence' },
+      { t:'note', l:'What you share stays in confidence. We use it solely to qualify this opportunity, restrict it to our review team, and never disclose it to any counterparty. If your disclosure requires a mutual NDA, ask us before you begin \u2014 we will arrange one.' },
+      { t:'text', n:'contactName', l:'Your Name', req:true },
+      { t:'text', n:'contactEmail', l:'Your Email', req:true },
+      { t:'text', n:'contactPhone', l:'Your Phone Number', req:true },
+      { t:'text', n:'offTaker', l:'Off-taker Name', req:true },
+      { t:'text', n:'offTakerContact', l:'Off-taker Contact' }
+    ]},
+    { title:'Cluster Specifications', intro:'', fields:[
+      { t:'select', n:'gpuModel', l:'GPU Model', o:['H100','H200','B200','GB200','B300','GB300','A100','MI300X','Other'] },
+      { t:'text', n:'nodesPerCluster', l:'Nodes per Cluster' },
+      { t:'text', n:'gpusPerNode', l:'GPUs per Node' },
+      { t:'text', n:'clusterConfig', l:'Cluster Configuration' },
+      { t:'text', n:'initialPower', l:'Initial Power per Cluster' },
+      { t:'text', n:'scalePotential', l:'Scale Potential per Cluster' },
+      { t:'text', n:'numClusters', l:'Number of Clusters' },
+      { t:'text', n:'totalGpus', l:'Total Combined GPUs at Launch' },
+      { t:'text', n:'totalScale', l:'Total Combined Scale Potential' },
+      { t:'yesno', n:'colocation', l:'Co-location Requirement' },
+      { t:'text', n:'networking', l:'Networking' },
+      { t:'text', n:'latency', l:'Latency Requirements' },
+      { t:'text', n:'cooling', l:'Cooling' },
+      { t:'yesno', n:'additionalStorage', l:'Additional Storage Needed?' },
+      { t:'text', n:'clusterColocation', l:'Cluster Co-location' },
+      { t:'text', n:'trainInfer', l:'% Training to % Inference' },
+      { t:'text', n:'powerUtil', l:'% of Power Utilization' }
+    ]},
+    { title:'Commercial Terms', intro:'', fields:[
+      { t:'select', n:'leaseStructure', l:'Lease Structure', o:['Operating Lease','Finance Lease','Capacity Lease / Take-or-Pay','Bare-metal Rental','Other'] },
+      { t:'text', n:'targetPrice', l:'Target Price Range' },
+      { t:'text', n:'downPayment', l:'Down Payment' },
+      { t:'text', n:'contractValue', l:'Estimated Contract Value' },
+      { t:'text', n:'leaserModel', l:'Model: Leaser' },
+      { t:'date', n:'goLiveDate', l:'Target Go-Live Date' }
+    ]},
+    { title:'Buyer Profile and Qualification', intro:'', fields:[
+      { t:'area', n:'endUserDesc', l:'End User Description' },
+      { t:'select', n:'buyerType', l:'Buyer Type', o:['Enterprise','Cloud / Service Provider','AI Lab / Model Developer','Government','Research Institution','Reseller / Broker','Other'] },
+      { t:'yesno', n:'usEntity', l:'U.S. Entity' },
+      { t:'select', n:'proofOfFunds', l:'Proof of Funds / Credit', o:['Available on request','Provided','In process','Not yet available'] },
+      { t:'select', n:'budgetStatus', l:'Budget Status', o:['Approved','In approval','Exploratory'] },
+      { t:'yesno', n:'takeOrPay', l:'Take-or-Pay Willingness' },
+      { t:'multi', n:'workloadType', l:'Workload Type', o:['AI Training','AI Inference','Fine-tuning','HPC / Simulation','Rendering','Mixed','Other'] },
+      { t:'select', n:'deploymentType', l:'Deployment Type', o:['Dedicated / Single-tenant','Colocation','Cloud / On-demand','Hybrid'] }
+    ]},
+    { title:'Deployment Geography', intro:'', fields:[
+      { t:'text', n:'primaryPreference', l:'Primary Preference' },
+      { t:'area', n:'acceptableLocations', l:'Acceptable North American Locations' },
+      { t:'text', n:'separationReq', l:'Cluster Separation Requirements' },
+      { t:'yesno', n:'passThrough', l:'Pass-through Power Savings' }
+    ]}
+  ]; }
+
+  setField = (n,v) => { this.setState(s => ({ fields:{...s.fields,[n]:v}, errMsg:'' })); };
+  toggleMulti = (n,o) => { this.setState(s => { const cur = Array.isArray(s.fields[n])?s.fields[n].slice():[]; const i=cur.indexOf(o); if(i>=0) cur.splice(i,1); else cur.push(o); return { fields:{...s.fields,[n]:cur}, errMsg:'' }; }); };
+
+  validateStep(){
+    const sec = this.schema()[this.state.step];
+    if(!sec) return [];
+    const f = this.state.fields, miss = [];
+    for(const fld of sec.fields){
+      if(!fld.req) continue;
+      const v = f[fld.n];
+      if(fld.t==='multi'){ if(!Array.isArray(v)||!v.length) miss.push(fld.l); }
+      else if(fld.t==='agree'){ if(v!==true) miss.push(fld.l); }
+      else if(v===undefined||v===null||v==='') miss.push(fld.l);
+    }
+    return miss;
+  }
+
+  next = () => {
+    const miss = this.validateStep();
+    if(miss.length){ this.setState({ errMsg:'Please complete the required items in this section.' }); return; }
+    const total = this.schema().length;
+    this.setState(s => ({ step: Math.min(s.step+1, total-1), errMsg:'' }));
+    if(typeof window!=='undefined') window.scrollTo(0,0);
+  };
+  back = () => {
+    if(this.state.step===0){ if(typeof window!=='undefined') window.location.href='index.html'; return; }
+    this.setState(s => ({ step: s.step-1, errMsg:'' }));
+    if(typeof window!=='undefined') window.scrollTo(0,0);
+  };
+  mkCode = () => 'TQ-'+Date.now().toString(36).toUpperCase().slice(-6);
+
+  submit = async () => {
+    const miss = this.validateStep();
+    if(miss.length){ this.setState({ errMsg:'Please complete the required items in this section.' }); return; }
+    if(this.state.submitting) return;
+    const code = this.state.refCode || this.mkCode();
+    const sections = this.schema();
+    const f = this.state.fields;
+    const payload = { access_key:this.ACCESS_KEY, subject:'[Tenant Qualification] '+(f.offTaker||'Unnamed')+' ('+code+')', from_name:'Tenant Qualification \u2014 '+(f.offTaker||'Unnamed'), replyto:(f.contactEmail||''), Reference:code };
+    sections.forEach(sec => { sec.fields.forEach(fld => {
+      if(fld.t==='note'||fld.t==='subhead') return;
+      const v = f[fld.n];
+      let out = '\u2014';
+      if(fld.t==='multi') out = (Array.isArray(v)&&v.length)?v.join(', '):'\u2014';
+      else if(fld.t==='agree') out = v===true?'Agreed':'Not agreed';
+      else if(v!==undefined&&v!==null&&v!=='') out = String(v);
+      payload[fld.l] = out;
+    }); });
+    try{var __k='cn_submissions';var __a=JSON.parse(localStorage.getItem(__k)||'[]');__a.push({form:'Tenant Qualification',ref:code,at:new Date().toISOString(),data:payload});localStorage.setItem(__k,JSON.stringify(__a));}catch(e){}
+    this.setState({ submitting:true, errMsg:'' });
+    try{
+      const res = await fetch(this.ENDPOINT, { method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'}, body:JSON.stringify(payload) });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      this.setState({ view:'confirm', refCode:code, submitting:false });
+    }catch(err){
+      this.setState({ submitting:false, errMsg:'We could not submit your form just now. Please check your connection and try again.' });
+    }
+    if(typeof window!=='undefined') window.scrollTo(0,0);
+  };
+
+  buildFields(sec){
+    const f = this.state.fields;
+    return sec.fields.map((fld,i) => {
+      const wrapStyle = fld.t==='subhead' ? 'margin:30px 0 6px;' : (fld.t==='note' ? 'margin-bottom:18px;' : 'margin-bottom:24px;');
+      const base = {
+        key: this.state.step+'-'+i,
+        label: fld.l, hint: fld.hint||'', hasHint: !!fld.hint, placeholder: fld.ph||'', wrapStyle,
+        isText: fld.t==='text', isArea: fld.t==='area', isSelect: fld.t==='select', isMulti: fld.t==='multi',
+        isYesno: fld.t==='yesno', isDate: fld.t==='date', isAgree: fld.t==='agree', isNote: fld.t==='note', isSubhead: fld.t==='subhead'
+      };
+      if(fld.t==='text'||fld.t==='area'||fld.t==='date'||fld.t==='select'||fld.t==='yesno'){
+        base.value = (f[fld.n]!==undefined && f[fld.n]!==null) ? f[fld.n] : '';
+        base.onInput = (e)=>this.setField(fld.n, e.target.value);
+        if(fld.t==='select') base.options = (fld.o||[]).map(o=>({v:o,l:o}));
+      }
+      if(fld.t==='multi'){
+        const arr = Array.isArray(f[fld.n])?f[fld.n]:[];
+        base.options = (fld.o||[]).map(o=>({ label:o, checked: arr.indexOf(o)>=0, toggle: ()=>this.toggleMulti(fld.n,o) }));
+      }
+      if(fld.t==='agree'){ base.checked = f[fld.n]===true; base.onToggle = (e)=>this.setField(fld.n, e.target.checked); }
+      return base;
+    });
+  }
+
+  renderVals(){
+    const { view, step, submitting, errMsg } = this.state;
+    const sections = this.schema();
+    const sec = sections[step];
+    const total = sections.length;
+    return {
+      formDisplay: view==='form' ? 'block' : 'none',
+      confirmDisplay: view==='confirm' ? 'flex' : 'none',
+      stepNum: step+1, stepCount: total,
+      pct: Math.round(((step+1)/total)*100),
+      sectionTitle: sec ? sec.title : '', sectionIntro: sec ? (sec.intro||'') : '',
+      currentFields: sec ? this.buildFields(sec) : [],
+      errMsg, errDisplay: errMsg ? 'block' : 'none',
+      backLabel: step===0 ? 'Back' : 'Back',
+      nextDisplay: step < total-1 ? 'inline-block' : 'none',
+      submitDisplay: step === total-1 ? 'inline-block' : 'none',
+      submitLabel: submitting ? 'Submitting...' : 'Submit Qualification',
+      submitting, submitOpacity: submitting ? '0.55' : '1',
+      back: this.back, next: this.next, submit: this.submit,
+      refCode: this.state.refCode || '\u2014'
+    };
+  }
+}
+</script>
+</body>
+</html>
