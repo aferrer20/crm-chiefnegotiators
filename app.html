@@ -20,6 +20,15 @@
     var ok=(r.data||[]).some(function(x){return x.id===REQUIRE;});
     if(!ok){ return deny('?denied=1'); }
     var s=document.getElementById('__auth_hide'); if(s) s.parentNode.removeChild(s);
+    if(CFG.OTHER_URL && (r.data||[]).some(function(x){return x.id===CFG.OTHER_COMPANY;})){
+      var mk=function(){ if(document.getElementById('__crm_switch'))return;
+        var a=document.createElement('a'); a.id='__crm_switch'; a.href=CFG.OTHER_URL;
+        a.textContent='\u21C4 Switch to '+(CFG.OTHER_NAME||'other workspace');
+        a.setAttribute('style','position:fixed;bottom:16px;right:16px;z-index:2147483646;background:rgba(17,31,56,.94);color:#eaf2f7;font:600 12px/1 -apple-system,BlinkMacSystemFont,sans-serif;padding:10px 14px;border-radius:22px;border:1px solid rgba(120,150,180,.4);text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.4)');
+        (document.body||document.documentElement).appendChild(a); };
+      if(document.body) mk();
+      var n=0, iv=setInterval(function(){ if(document.body) mk(); if(++n>20) clearInterval(iv); }, 300);
+    }
   }catch(e){ deny(); }
 })();
 </script>

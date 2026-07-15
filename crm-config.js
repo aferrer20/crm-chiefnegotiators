@@ -20,5 +20,10 @@ window.__CRM = {
   ICON:         '⚖️',
   ACCENT:       '#b98a5e',   // Chief Negotiators = gold / bronze
   ACCENT2:      '#8b5535',
-  BTN_TEXT:     '#2a1c0f'
+  BTN_TEXT:     '#2a1c0f',
+
+  // ---- Sibling workspace (owner-only switch link) ----
+  OTHER_COMPANY: 'ssp',
+  OTHER_NAME:    'Strategic Supply Partners',
+  OTHER_URL:     'https://sspcrm.thechiefnegotiators.com'
 };
