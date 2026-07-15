@@ -87,7 +87,7 @@ function show(view){ ['loading','signin','sent','denied'].forEach(v=>$(v).style.
 function msg(kind,text){ const m=$('msg'); m.className='msg show '+kind; m.textContent=text; }
 
 async function accessibleCompanies(){
-  const { data, error } = await sb.from('companies').select('id,name');
+  const { data, error } = await sb.from('crm_companies').select('id,name');
   if(error) throw error;
   return data||[];
 }

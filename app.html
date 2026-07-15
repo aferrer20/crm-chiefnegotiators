@@ -15,7 +15,7 @@
     var sres=await c.auth.getSession();
     var session=sres&&sres.data&&sres.data.session;
     if(!session){ return deny(); }
-    var r=await c.from('companies').select('id');
+    var r=await c.from('crm_companies').select('id');
     if(r.error){ return deny('?err=1'); }
     var ok=(r.data||[]).some(function(x){return x.id===REQUIRE;});
     if(!ok){ return deny('?denied=1'); }
