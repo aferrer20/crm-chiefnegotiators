@@ -54,6 +54,12 @@ input::placeholder,textarea::placeholder{color:#5E6E77;font-style:italic}
 .done .acts{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:28px}
 .ghost{display:inline-flex;align-items:center;min-height:48px;padding:0 24px;border:1px solid var(--gold);border-radius:40px;color:var(--gold);text-decoration:none;font:13px var(--mono);letter-spacing:2px;cursor:pointer;background:none}
 .ghost:hover{background:var(--wash);color:var(--ink)}
+.reg{margin-top:30px;padding-top:22px;border-top:1px solid var(--rule)}
+.reg .regk{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--gold);text-transform:uppercase}
+.reg .regnote{margin:8px 0 16px;font-size:15px;line-height:1.6;color:var(--mute)}
+.regacts{display:flex;flex-wrap:wrap;gap:12px}
+.regbtn{display:inline-flex;align-items:center;min-height:48px;padding:0 26px;border-radius:40px;background:var(--gold);color:var(--bg);text-decoration:none;font:bold 13px var(--mono);letter-spacing:2px}
+.regbtn:hover{background:#E6B27E;color:var(--bg)}
 .sent .done{display:block}.sent .form-wrap{display:none}
 @keyframes type{from{max-width:0}to{max-width:320px}}@keyframes blink{50%{opacity:0}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}@keyframes fade{from{opacity:0}}
@@ -80,6 +86,14 @@ input::placeholder,textarea::placeholder{color:#5E6E77;font-style:italic}
 <div><div class="mono">Date</div><div class="v" id="fDate"></div></div>
 <div><div class="mono">Time</div><div class="v" id="fTime"></div></div>
 <div><div class="mono">Venue</div><div class="v" id="fVenue"></div></div>
+</div>
+<div class="reg" id="reg" hidden>
+<div class="regk" id="regKicker">NANOG 98</div>
+<p class="regnote" id="regNote"></p>
+<div class="regacts">
+<a class="regbtn" id="regBtn" target="_blank" rel="noopener">Register for NANOG 98</a>
+<a class="ghost" id="socialBtn" target="_blank" rel="noopener" hidden>Socials only</a>
+</div>
 </div>
 <form id="rsvp" novalidate>
 <div>
@@ -155,6 +169,7 @@ $("fDate").innerHTML=x?DAY[x.getDay()]+"<br>"+MON[x.getMonth()]+" "+x.getDate()+
 $("fTime").innerHTML=esc([d.time||"TBC",d.endTime].filter(Boolean).join(" – "))+(d.timeNote?"<br><i>"+esc(d.timeNote)+"</i>":"");
 $("fVenue").innerHTML=esc(d.venue||"TBC")+(d.venueNote?"<br><i>"+esc(d.venueNote)+"</i>":"");
 $("replyBy").textContent=d.replyBy||"";
+if(d.registerUrl){$("reg").hidden=false;$("regBtn").href=d.registerUrl;$("regBtn").textContent=d.registerLabel||"Register for NANOG 98";$("regKicker").textContent=d.registerKicker||"NANOG 98";$("regNote").textContent=d.registerNote||"";if(d.socialsUrl){$("socialBtn").hidden=false;$("socialBtn").href=d.socialsUrl;$("socialBtn").textContent=d.socialsLabel||"Socials only";}}
 if(x){var t=new Date();t.setHours(0,0,0,0);var n=Math.round((x-t)/864e5);$("tminus").innerHTML=n>0?"T&minus;"+n+(n===1?" day":" days"):"";}
 if(d.allowGuest===false)$("guestField").hidden=true;
 if(d.askDietary===false)$("dietField").hidden=true;
