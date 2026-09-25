@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RSVP · The Chief Negotiators</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0E0D10;--sheet:#141216;--frame:#3A2C1F;--rule:#4A3826;--ink:#F4ECDE;--body:#E6DCCB;--mute:#BFB3A0;--foot:#A89B88;--gold:#D9A066;--glow:rgba(217,160,102,.45);--wash:rgba(217,160,102,.08);--err:#E88B7A;--serif:Georgia,'Times New Roman',serif;--mono:'JetBrains Mono','SFMono-Regular',Menlo,Consolas,monospace}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--body);font-family:var(--serif)}
+a{color:var(--gold)}a:hover{color:var(--ink)}
+.page{max-width:640px;margin:0 auto;padding:24px 16px 40px}
+.sheet{background:var(--sheet);border:1px solid var(--frame)}
+.px{padding-left:44px;padding-right:44px}
+.mast{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-top:26px;padding-bottom:22px}
+.brand{font-size:15px;letter-spacing:4px;color:var(--ink)}.brand span{color:var(--gold)}
+.mono{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--gold);text-transform:uppercase}
+.hero{display:block;width:100%;height:auto;animation:fade 1.2s ease-out both}
+.status{display:flex;justify-content:space-between;gap:12px;padding-top:16px;color:var(--mute)}
+.dot{color:var(--gold);animation:pulse 1.6s ease-in-out infinite}
+.typed{margin-top:30px;font-family:var(--mono);font-size:12px;letter-spacing:4px;color:var(--gold)}
+.typed .t{display:inline-block;overflow:hidden;white-space:nowrap;vertical-align:bottom;animation:type 1.4s steps(16,end) .3s both}
+.typed .c{animation:blink 1s step-end infinite}
+h1{margin:12px 0 0;font-weight:normal;font-size:44px;line-height:1.1;color:var(--ink);text-wrap:balance;animation:rise .8s ease-out 1.2s both}
+.lede{margin:16px 0 0;font-size:18px;line-height:1.6;text-wrap:pretty;animation:rise .8s ease-out 1.5s both}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:28px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.facts>div{padding:18px 12px}.facts>div:first-child{padding-left:0}.facts>div+div{border-left:1px solid var(--rule)}
+.facts .v{margin-top:6px;font-size:18px;line-height:1.35;color:var(--ink)}.facts i{color:var(--mute)}
+form{margin-top:34px;display:grid;gap:22px}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 22px}
+label{display:grid;gap:8px}
+input,textarea{width:100%;background:transparent;border:0;border-bottom:1px solid var(--rule);color:var(--ink);font:17px/1.4 var(--serif);padding:8px 0 10px;border-radius:0;outline:none;transition:border-color .2s}
+textarea{resize:vertical;min-height:64px}
+input:focus,textarea:focus{border-bottom-color:var(--gold)}
+input::placeholder,textarea::placeholder{color:#6f6556;font-style:italic}
+.opt{color:var(--foot)}
+.choice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.choice span{display:flex;align-items:center;justify-content:center;min-height:52px;border:1px solid var(--rule);font:15px var(--serif);color:var(--mute);cursor:pointer;text-align:center;padding:10px;transition:all .2s}
+.choice input:checked+span{border-color:var(--gold);color:var(--ink);background:var(--wash)}
+.choice input:focus-visible+span{outline:1px solid var(--gold);outline-offset:3px}
+.hp{position:absolute;left:-9999px}
+.bad input{border-bottom-color:var(--err)}
+.msg{font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--err);min-height:14px}
+.submit{justify-self:center;margin-top:6px;border:0;border-radius:40px;background:var(--gold);color:var(--bg);font:bold 15px var(--mono);letter-spacing:3px;padding:18px 44px;min-height:56px;cursor:pointer;animation:glow 2.8s ease-in-out 2s infinite}
+.submit:hover{background:#E6B27E}.submit[disabled]{opacity:.6;cursor:wait;animation:none}
+.fine{margin:0;text-align:center;font-style:italic;font-size:15px;color:var(--mute)}
+.scan{height:1px;margin-top:36px;background:var(--frame) linear-gradient(90deg,var(--frame),var(--gold),var(--frame)) no-repeat;background-size:50% 1px;animation:scan 3.2s linear infinite}
+.foot{padding-top:22px;padding-bottom:28px;text-align:center}
+.after{text-align:center;padding:10px 0 4px;color:#8C8272;font:11px/1.6 Helvetica,Arial,sans-serif}
+.done{display:none;padding-top:30px;padding-bottom:10px}
+.done .acts{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:28px}
+.ghost{display:inline-flex;align-items:center;min-height:48px;padding:0 24px;border:1px solid var(--gold);border-radius:40px;color:var(--gold);text-decoration:none;font:13px var(--mono);letter-spacing:2px;cursor:pointer;background:none}
+.ghost:hover{background:var(--wash);color:var(--ink)}
+.sent .done{display:block}.sent .form-wrap{display:none}
+@keyframes type{from{max-width:0}to{max-width:320px}}@keyframes blink{50%{opacity:0}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}@keyframes fade{from{opacity:0}}
+@keyframes pulse{50%{opacity:.25}}@keyframes scan{from{background-position:-50% 0}to{background-position:150% 0}}
+@keyframes glow{50%{box-shadow:0 0 22px 2px var(--glow)}}
+[hidden]{display:none!important}.banner{background:var(--gold);color:var(--bg);font:11px var(--mono);letter-spacing:2px;text-align:center;padding:8px 12px;text-transform:uppercase}.closed{padding-top:34px;padding-bottom:10px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+@media (max-width:600px){.px{padding-left:22px;padding-right:22px}h1{font-size:36px}.lede{font-size:17px}.row,.facts{grid-template-columns:minmax(0,1fr)}.facts>div{padding:14px 0!important;border-left:0!important}.facts>div+div{border-top:1px solid var(--rule)}.mast .mono{display:none}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="banner" id="banner" hidden>Preview · this event isn't live yet</div>
+<main class="sheet" id="sheet">
+<div class="mast px"><div class="brand">THE CHIEF <span>NEGOTIATORS</span></div><div class="mono">Private invitation</div></div>
+<img class="hero" id="hero" src="assets/email/event-yacht-hero.jpg" width="1200" height="675" alt="">
+<div class="status px mono"><span style="color:var(--mute)"><span class="dot">&#9679;</span>&nbsp; <span id="statusLine">Guest list open</span></span><span id="tminus"></span></div>
+<section class="closed px" id="closed" hidden><div class="typed"><span class="t">&gt; ACCESS CLOSED</span><span class="c">_</span></div><h1 id="closedTitle">Replies are closed.</h1><p class="lede" id="closedLine">This guest list is no longer taking replies. If you think that's a mistake, reply to your invitation email.</p></section>
+<section class="form-wrap px" id="formWrap">
+<div class="typed"><span class="t">&gt; CONFIRM ACCESS</span><span class="c">_</span></div>
+<h1 id="title">Reserve your place.</h1>
+<p class="lede" id="lede"></p>
+<div class="facts">
+<div><div class="mono">Date</div><div class="v" id="fDate"></div></div>
+<div><div class="mono">Time</div><div class="v" id="fTime"></div></div>
+<div><div class="mono">Venue</div><div class="v" id="fVenue"></div></div>
+</div>
+<form id="rsvp" novalidate>
+<div>
+<div class="mono" style="margin-bottom:10px">Will you join us?</div>
+<div class="choice">
+<label><input type="radio" name="attending" value="yes" checked><span>Yes, I'll be there</span></label>
+<label><input type="radio" name="attending" value="no"><span>Regretfully, no</span></label>
+</div>
+</div>
+<div class="row">
+<label><span class="mono">First name</span><input name="first_name" autocomplete="given-name" required></label>
+<label><span class="mono">Last name</span><input name="last_name" autocomplete="family-name" required></label>
+<label><span class="mono">Email</span><input name="email" type="email" autocomplete="email" required></label>
+<label><span class="mono">Mobile <span class="opt">· optional</span></span><input name="phone" type="tel" autocomplete="tel" placeholder="For day-of updates"></label>
+<label><span class="mono">Company</span><input name="company" autocomplete="organization"></label>
+<label><span class="mono">Title <span class="opt">· optional</span></span><input name="title" autocomplete="organization-title"></label>
+</div>
+<div class="row" id="extras">
+<label id="guestField"><span class="mono">Guest <span class="opt">· optional</span></span><input name="guest_name" placeholder="Full name, if bringing one"></label>
+<label id="dietField"><span class="mono">Dietary needs <span class="opt">· optional</span></span><input name="dietary" placeholder="Allergies, preferences"></label>
+</div>
+<label><span class="mono">Note to host <span class="opt">· optional</span></span><textarea name="note" rows="2"></textarea></label>
+<input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+<div class="msg" id="msg" role="alert"></div>
+<button class="submit" id="go" type="submit">CONFIRM RSVP</button>
+<p class="fine" id="replyBy"></p>
+</form>
+</section>
+<section class="done px" aria-live="polite">
+<div class="typed"><span class="t" id="doneTag">&gt; ACCESS CONFIRMED</span><span class="c">_</span></div>
+<h1 id="doneTitle">You're confirmed.</h1>
+<p class="lede" id="doneLine"></p>
+<div class="acts" id="doneActs"><a class="ghost" id="ics" download="invitation.ics">ADD TO CALENDAR</a><button class="ghost" id="edit" type="button">EDIT RSVP</button></div>
+</section>
+<div class="scan"></div>
+<div class="foot px mono" style="color:var(--foot)">This invitation is personal · please do not forward</div>
+</main>
+<div class="after">The Chief Negotiators · St. Petersburg, Florida</div>
+</div>
+<script>
+(function(){
+var SB="https://stpkhpxhqzgruorrupaw.supabase.co",KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0cGtocHhocXpncnVvcnJ1cGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDMxNjYsImV4cCI6MjA5NDY3OTE2Nn0.1TjVRSpoNGTk6cs4cR2CA3vxAD3aLTTkNZW0IYgkkws";
+var ACC={gold:"#D9A066",platinum:"#C9D1D9",ice:"#6FC3DF",ember:"#E07A5F"};
+var MON=["January","February","March","April","May","June","July","August","September","October","November","December"],DAY=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+var FALLBACK={id:"venetian-lady-2026-10-18",status:"live",data:{name:"The Venetian Lady",kind:"Private evening",date:"2026-10-18",time:"6:30 PM",endTime:"10:00 PM",timeNote:"Boarding",venue:"The Venetian Lady",venueNote:"Miami, Florida",tz:"America/New_York",replyBy:"Kindly reply by October 10. Boarding details follow for confirmed guests.",hero:"assets/email/event-yacht-hero.jpg",accent:"gold",allowGuest:true,askDietary:true,rsvpTitle:"Reserve your place aboard.",rsvpLede:"A private evening on The Venetian Lady: sunset on the water, cocktails on deck, and a short guest list. Confirm below and we'll hold your place.",confirmLine:"Your place aboard is held. Boarding details and the dock location will follow by email."}};
+var q=new URLSearchParams(location.search),KEYID=q.get("e")||FALLBACK.id;
+var $=function(id){return document.getElementById(id)};
+var f=$("rsvp"),msg=$("msg"),go=$("go"),sheet=$("sheet"),EV=null,LS;
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function pd(s){var m=String(s||"").match(/^(\d{4})-(\d{2})-(\d{2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):null}
+function hhmm(t){var m=String(t||"").match(/(\d{1,2})(?::(\d{2}))?\s*([ap])?/i);if(!m)return null;var h=+m[1]%12;if(m[3]&&/p/i.test(m[3]))h+=12;if(!m[3]&&+m[1]===12)h=12;return(h<10?"0":"")+h+(m[2]||"00")+"00"}
+function hexA(hex,a){var n=parseInt(hex.slice(1),16);return"rgba("+(n>>16&255)+","+(n>>8&255)+","+(n&255)+","+a+")"}
+function localEvent(id){try{var l=JSON.parse(localStorage.getItem("cn_events_v1")||"[]");return l.find(function(x){return x.id===id})||null}catch(e){return null}}
+function load(){
+return fetch(SB+"/rest/v1/events?id=eq."+encodeURIComponent(KEYID)+"&select=id,status,data",{headers:{apikey:KEY,Authorization:"Bearer "+KEY}})
+.then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(rows){
+if(rows&&rows[0])return rows[0];
+var loc=localEvent(KEYID);if(loc){loc.preview=true;return loc}
+return KEYID===FALLBACK.id?FALLBACK:null;
+}).catch(function(){var loc=localEvent(KEYID);if(loc){loc.preview=loc.status!=="live";return loc}return KEYID===FALLBACK.id?FALLBACK:null});
+}
+function render(ev){
+EV=ev;LS="cn_rsvp_"+ev.id;var d=ev.data||{},ac=ACC[d.accent]||(/^#/.test(d.accent||"")?d.accent:ACC.gold);
+var r=document.documentElement.style;r.setProperty("--gold",ac);r.setProperty("--glow",hexA(ac,.45));r.setProperty("--wash",hexA(ac,.08));
+document.title="RSVP · "+(d.name||"Private invitation")+" · The Chief Negotiators";
+if(d.hero){$("hero").src=d.hero;$("hero").alt=d.name||"";}else $("hero").hidden=true;
+var x=pd(d.date);
+$("title").textContent=d.rsvpTitle||"Reserve your place.";
+$("lede").textContent=d.rsvpLede||("A "+(d.kind||"private event").toLowerCase()+(d.venue?" at "+d.venue:"")+". Confirm below and we'll hold your place.");
+$("fDate").innerHTML=x?DAY[x.getDay()]+"<br>"+MON[x.getMonth()]+" "+x.getDate()+", "+x.getFullYear():"To be confirmed";
+$("fTime").innerHTML=esc(d.time||"TBC")+(d.timeNote?"<br><i>"+esc(d.timeNote)+"</i>":"");
+$("fVenue").innerHTML=esc(d.venue||"TBC")+(d.venueNote?"<br><i>"+esc(d.venueNote)+"</i>":"");
+$("replyBy").textContent=d.replyBy||"";
+if(x){var t=new Date();t.setHours(0,0,0,0);var n=Math.round((x-t)/864e5);$("tminus").innerHTML=n>0?"T&minus;"+n+(n===1?" day":" days"):"";}
+if(d.allowGuest===false)$("guestField").hidden=true;
+if(d.askDietary===false)$("dietField").hidden=true;
+if(d.allowGuest===false&&d.askDietary===false)$("extras").hidden=true;
+if(ev.preview)$("banner").hidden=false;
+if(ev.status==="closed"){$("formWrap").hidden=true;$("closed").hidden=false;$("statusLine").textContent="Guest list closed";}
+if(x&&d.time){var st=hhmm(d.time),en=hhmm(d.endTime)||null,ymd=d.date.replace(/-/g,"");var tz=d.tz||"America/New_York";
+var ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//The Chief Negotiators//RSVP//EN","BEGIN:VEVENT","UID:"+ev.id+"@thechiefnegotiators.com","DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z","DTSTART;TZID="+tz+":"+ymd+"T"+st].concat(en?["DTEND;TZID="+tz+":"+ymd+"T"+en]:[]).concat(["SUMMARY:"+(d.name||"Private event"),"LOCATION:"+[d.venue,d.venueNote].filter(Boolean).join(", "),"DESCRIPTION:Hosted by The Chief Negotiators. Details to follow.","END:VEVENT","END:VCALENDAR"]).join("\r\n");
+$("ics").href="data:text/calendar;charset=utf-8,"+encodeURIComponent(ics);$("ics").download=(ev.id||"invitation")+".ics";}else $("ics").hidden=true;
+[["first","first_name"],["last","last_name"],["email","email"],["company","company"]].forEach(function(p){var v=q.get(p[0])||q.get(p[1]);if(v&&!/^\{\{/.test(v))f.elements[p[1]].value=v;});
+try{var prev=JSON.parse(localStorage.getItem(LS)||"null");if(prev){Object.keys(prev).forEach(function(k){var el=f.elements[k];if(!el)return;if(k==="attending"){f.querySelector('[name=attending][value="'+prev[k]+'"]').checked=true}else if(!el.value)el.value=prev[k]||"";});}}catch(e){}
+syncExtras();
+}
+function notFound(){$("formWrap").hidden=true;$("closed").hidden=false;$("closedTitle").textContent="Invitation not found.";$("closedLine").textContent="This link doesn't match an open event. Check the link in your invitation email, or reply to it and we'll sort it out.";$("statusLine").textContent="No event";$("hero").hidden=true;}
+function syncExtras(){if(!EV)return;var d=EV.data||{};$("extras").style.display=(f.elements.attending.value==="yes"&&!(d.allowGuest===false&&d.askDietary===false))?"":"none";}
+f.addEventListener("change",syncExtras);
+function showDone(yes){var d=EV.data||{};
+$("doneTag").textContent=yes?"> ACCESS CONFIRMED":"> RESPONSE RECEIVED";
+$("doneTitle").textContent=yes?"You're confirmed.":"Thank you for letting us know.";
+$("doneLine").textContent=yes?(d.confirmLine||"Your place is held. Details follow by email."):"We'll miss you. We'll be in touch about the next one.";
+$("ics").style.display=yes?"":"none";sheet.classList.add("sent");window.scrollTo({top:0,behavior:"smooth"});}
+$("edit").onclick=function(){sheet.classList.remove("sent");};
+f.addEventListener("submit",function(e){
+e.preventDefault();if(!EV)return;msg.textContent="";
+f.querySelectorAll(".bad").forEach(function(x){x.classList.remove("bad")});
+if(f.elements.website.value)return showDone(true);
+var d={};["first_name","last_name","email","phone","company","title","guest_name","dietary","note"].forEach(function(k){d[k]=f.elements[k].value.trim();});
+d.attending=f.elements.attending.value;
+var bad=[];if(!d.first_name)bad.push("first_name");if(!d.last_name)bad.push("last_name");if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email))bad.push("email");
+if(bad.length){bad.forEach(function(k){f.elements[k].closest("label").classList.add("bad")});msg.textContent=bad.indexOf("email")>-1&&bad.length===1?"Please check your email address.":"Please add your name and a valid email.";f.elements[bad[0]].focus();return;}
+if(EV.preview){msg.textContent="Preview only. Set the event to Live in the Event Hub to take replies.";return;}
+var yes=d.attending==="yes",ed=EV.data||{};
+var row={event_key:EV.id,brand:"chief",first_name:d.first_name,last_name:d.last_name,email:d.email.toLowerCase(),company:d.company||null,title:d.title||null,phone:d.phone||null,attending:yes,guest_name:yes&&ed.allowGuest!==false&&d.guest_name||null,dietary:yes&&ed.askDietary!==false&&d.dietary||null,note:d.note||null,source:{ref:q.get("ref")||null,utm_source:q.get("utm_source")||null,utm_campaign:q.get("utm_campaign")||null,ua:navigator.userAgent.slice(0,160)}};
+go.disabled=true;go.textContent="CONFIRMING…";
+fetch(SB+"/rest/v1/event_rsvps",{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(row)})
+.then(function(r){if(!r.ok)throw new Error(r.status);try{localStorage.setItem(LS,JSON.stringify(d))}catch(e){}showDone(yes);})
+.catch(function(){msg.innerHTML='We couldn\'t save that just now. Please try again, or reply to your invitation email with your RSVP.';})
+.finally(function(){go.disabled=false;go.textContent="CONFIRM RSVP";});
+});
+load().then(function(ev){if(ev)render(ev);else notFound();});
+})();
+</script>
+</body>
+</html>
