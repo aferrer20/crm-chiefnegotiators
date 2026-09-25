@@ -6,14 +6,81 @@
 <meta name="color-scheme" content="dark">
 <meta name="supported-color-schemes" content="dark">
 <title>The Chief Negotiators — Yacht Party</title>
-<style>@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&display=swap');@keyframes evRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}@keyframes evFade{from{opacity:0}to{opacity:1}}@keyframes evRule{from{width:0}to{width:48px}}@keyframes evGlow{0%,100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}50%{box-shadow:0 0 24px 2px currentColor}}.ev-r1{animation:evRise .9s ease-out .2s both}.ev-r2{animation:evRise .9s ease-out .5s both}.ev-r3{animation:evFade 1s ease-out 1.1s both}.ev-rule{animation:evRule .8s ease-out .9s both}.ev-r4{animation:evRise .8s ease-out 1.4s both}.ev-r5{animation:evRise .8s ease-out 1.6s both}.ev-cta{animation:evFade .8s ease-out 1.9s both,evGlow 3s ease-in-out 3s infinite}@media (prefers-reduced-motion:reduce){.ev-r1,.ev-r2,.ev-r3,.ev-r4,.ev-r5,.ev-rule,.ev-hero,.ev-cta{animation:none!important}}@media (max-width:620px){.ev-r1,.ev-r2,.ev-r3,.ev-r4,.ev-r5,.ev-rule,.ev-hero,.ev-cta{animation:none!important}.ev-px{padding-left:24px!important;padding-right:24px!important}.ev-sky{padding-bottom:290px!important;background-size:cover!important;background-position:68% bottom!important}.ev-invited div{font-size:11px!important;letter-spacing:4px!important}.ev-logo{width:160px!important}.ev-gap{height:28px!important;line-height:28px!important}.ev-tag div{font-size:11px!important;line-height:20px!important;letter-spacing:3px!important}.ev-sky .ev-rule{margin:20px 0 16px!important}.ev-h1{font-size:46px!important;line-height:48px!important}.ev-h2{font-size:29px!important;line-height:37px!important}.ev-title{font-size:26px!important;line-height:33px!important}.ev-body{font-size:15px!important;line-height:24px!important}.ev-col{display:inline-block!important;width:50%!important;border-left:0!important;padding:14px 6px!important;box-sizing:border-box}.ev-cta a{padding:17px 48px!important}}
-body{margin:0;padding:0;background-color:#021118;}
-/* Kill all entrance/glow animations — email should be static. This removes the
-   pulsing gold box-shadow "blurry square" around the RSVP button and the fade-ins. */
-.ev-r1,.ev-r2,.ev-r3,.ev-r4,.ev-r5,.ev-rule,.ev-hero,.ev-cta,.ev-cta a{animation:none!important;opacity:1!important;transform:none!important;box-shadow:none!important;}
+<style>
+  body{margin:0;padding:0;background-color:#021118;}
+  /* Type system
+     Display  : Didone serif  (baked into hero; live for headings/sign-off)
+     Label    : letter-spaced sans caps  (eyebrows, city, schedule, highlight)
+     Body     : Georgia serif, editorial  (invitation copy + note) */
+  .serif{font-family:Georgia,'Times New Roman',Times,serif;}
+  .disp{font-family:Didot,'Didot LT STD','Bodoni 72','Bodoni Moda','Bodoni MT',Georgia,'Times New Roman',serif;}
+  .sans{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;}
+  @media (max-width:620px){
+    .px{padding-left:26px!important;padding-right:26px!important}
+    .t-title{font-size:27px!important;line-height:34px!important}
+    .t-body{font-size:16px!important;line-height:27px!important}
+    .t-venue{font-size:29px!important;line-height:35px!important}
+  }
 </style>
 </head>
 <body style="margin:0;padding:0;background-color:#021118;">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">Sunday, Oct 18 · 7–10:30 PM · The Venetian Lady, Miami. By invitation only; space is limited.</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#021118" style="background-color:#021118;"><tr><td align="center" style="padding:0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#021118" style="max-width:600px;background-color:#021118;"><tr><td class="ev-px ev-sky" bgcolor="#041C2C" background="https://cncrm.thechiefnegotiators.com/assets/email/event-yacht-full.jpg?v=1018k" valign="top" style="padding:36px 44px 280px;background-color:#041C2C;background-image:url('https://cncrm.thechiefnegotiators.com/assets/email/event-yacht-full.jpg?v=1018k');background-size:cover;background-position:center bottom;background-repeat:no-repeat;"><!--[if gte mso 9]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:600px;height:710px;"><v:fill type="frame" src="https://cncrm.thechiefnegotiators.com/assets/email/event-yacht-full.jpg?v=1018k" color="#041C2C" /><v:textbox inset="0,0,0,0"><![endif]--><div><img class="ev-logo" src="https://cncrm.thechiefnegotiators.com/assets/email/logo-cn-reversed.png?v=1018k" width="190" alt="The Chief Negotiators" style="display:block;width:190px;max-width:100%;height:auto;border:0;outline:none;color:#F4F1EA;font-family:Georgia,'Times New Roman',Times,serif;font-size:16px;letter-spacing:3px;" /><div class="ev-gap" style="height:38px;line-height:38px;font-size:0;">&nbsp;</div><div class="ev-h1 ev-r1" style="font-family:Didot,'Didot LT STD','Bodoni 72','Bodoni Moda','Bodoni MT',Georgia,'Times New Roman',serif;font-weight:400;font-size:72px;line-height:72px;letter-spacing:.5px;color:#F4F1EA;">NANOG,</div><div class="ev-h2 ev-r2" style="font-family:Didot,'Didot LT STD','Bodoni 72','Bodoni Moda','Bodoni MT',Georgia,'Times New Roman',serif;font-weight:400;font-style:italic;font-size:48px;line-height:56px;color:#F4F1EA;padding-top:4px;">but make it <span style="color:#D9A45F;">Miami.</span></div><div class="ev-rule" style="width:48px;height:2px;line-height:2px;font-size:0;background-color:#D9A45F;margin:28px 0 22px;">&nbsp;</div><div class="ev-r3 ev-tag"><div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:4px;text-transform:uppercase;color:#F4F1EA;line-height:25px;">Good people.<br>Great conversations.<br>Even better views.</div></div></div><!--[if gte mso 9]></v:textbox></v:rect><![endif]--></td></tr><tr><td class="ev-px" align="center" style="padding:30px 44px 0;text-align:center;"><div class="ev-r4 ev-invited"><div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;letter-spacing:6px;text-transform:uppercase;color:#F4F1EA;line-height:20px;">You're invited aboard</div></div><div class="ev-title ev-r4" style="font-family:Didot,'Didot LT STD','Bodoni 72','Bodoni Moda','Bodoni MT',Georgia,'Times New Roman',serif;font-weight:400;font-style:italic;font-size:36px;line-height:44px;color:#D9A45F;padding-top:12px;">The Chief Negotiators<br>Yacht Party</div><div class="ev-body ev-r5" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;line-height:26px;color:#D5DCE0;padding-top:14px;">Six months ago I founded The Chief Negotiators — and to celebrate, I'm throwing a yacht party in Miami to kick off NANOG 98.<br><br>Come aboard The Venetian Lady for a sunset cruise through the skyline — an open bar, hors d'oeuvres and a DJ on deck, and the unofficial start to NANOG week. This one's for the whole community: new partners, old and new NANOG friends, and everyone who has helped us get off the ground.</div></td></tr><tr><td class="ev-px" align="center" style="padding:40px 44px 0;text-align:center;"><div style="font-family:Didot,'Didot LT STD','Bodoni 72','Bodoni Moda','Bodoni MT',Georgia,'Times New Roman',serif;font-weight:400;font-size:34px;line-height:40px;color:#F4F1EA;">The Venetian Lady</div><div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#A9B4BA;line-height:18px;padding-top:8px;">Miami, Florida</div><div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:19px;line-height:26px;color:#F4F1EA;padding-top:18px;">Sunday, October 18, 2026</div><div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;line-height:22px;color:#A9B4BA;padding-top:8px;">Boarding&nbsp;6:30&nbsp;pm <span style="color:#D9A45F;">&nbsp;&middot;&nbsp;</span> Cruising&nbsp;7:00–10:30&nbsp;pm</div><div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#D9A45F;line-height:18px;padding-top:18px;font-weight:bold;">Open bar all evening</div></td></tr><tr><td style="padding:34px 0 0;"><div style="height:1px;line-height:1px;font-size:0;background-color:#17323F;">&nbsp;</div></td></tr><tr><td align="center" style="padding:36px 24px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;"><tr><td class="ev-cta" align="center" bgcolor="#D9A45F" style="background-color:#D9A45F;border-radius:2px;color:#D9A45F;"><a href="https://cncrm.thechiefnegotiators.com/rsvp.html?e=venetian-lady-2026-10-18&first={{first_name}}&last={{last_name}}&email={{email}}&company={{company}}" target="_blank" style="display:block;padding:18px 64px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:bold;letter-spacing:5px;text-transform:uppercase;text-decoration:none;"><span style="color:#021118;">RSVP</span></a></td></tr></table></td></tr><tr><td align="center" style="padding:24px 24px 0;text-align:center;"><a href="https://nanog.org/events/nanog-98/register/" target="_blank" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;letter-spacing:1px;text-decoration:none;"><span style="color:#D9A45F;border-bottom:1px solid #D9A45F;padding-bottom:4px;">Register for NANOG 98 &nbsp;&rarr;</span></a></td></tr><tr><td class="ev-px" align="center" style="padding:30px 52px 0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:25px;color:#A9B4BA;text-align:center;">Attending NANOG or not, you're welcome aboard — and if you can make the meeting, I'd love for you to register and join us for the week.</td></tr><tr><td class="ev-px" align="center" style="padding:36px 44px 44px;text-align:center;"><div style="font-family:Didot,'Didot LT STD','Bodoni 72','Bodoni Moda','Bodoni MT',Georgia,'Times New Roman',serif;font-weight:400;font-size:24px;line-height:30px;color:#F4F1EA;">See you on the water,</div><div style="font-family:Didot,'Didot LT STD','Bodoni 72','Bodoni Moda','Bodoni MT',Georgia,'Times New Roman',serif;font-weight:400;font-size:26px;line-height:32px;color:#F4F1EA;padding-top:10px;">Amanda Ferrer</div><div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#A9B4BA;line-height:18px;padding-top:10px;">Founder · The Chief Negotiators</div></td></tr></table><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;"><tr><td align="center" style="padding:22px 20px 26px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;line-height:17px;color:#7C8A92;text-align:center;">The Chief Negotiators &middot; St. Petersburg, Florida<br>You're receiving this because we've worked together or corresponded. <a href="{{unsubscribe_url}}" style="color:#D9A45F;text-decoration:underline;">Unsubscribe</a></td></tr></table></td></tr></table>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">Sunday, Oct 18 · Boarding 6:30 PM · The Venetian Lady, Miami. By invitation only.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#021118" style="background-color:#021118;"><tr><td align="center" style="padding:0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#021118" style="max-width:600px;background-color:#021118;">
+
+  <!-- HERO (single flattened image: photo + lockup + headline + tagline) -->
+  <tr><td style="padding:0;font-size:0;line-height:0;">
+    <img src="https://cncrm.thechiefnegotiators.com/assets/email/event-hero-flat.jpg?v=1018m" width="600" alt="NANOG, but make it Miami — you're invited aboard The Chief Negotiators Yacht Party on The Venetian Lady in Miami" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;">
+  </td></tr>
+
+  <!-- INVITATION -->
+  <tr><td class="px" align="center" style="padding:44px 48px 0;text-align:center;">
+    <div class="sans" style="font-size:12px;letter-spacing:5px;text-transform:uppercase;color:#8FA6AE;line-height:20px;">You&rsquo;re invited aboard</div>
+    <div class="disp t-title" style="font-style:italic;font-size:34px;line-height:42px;color:#D9A45F;padding-top:14px;">The Chief Negotiators<br>Yacht Party</div>
+    <div class="serif t-body" style="font-size:17px;line-height:29px;color:#C7D0D6;padding-top:20px;">Six months ago I founded The Chief Negotiators &mdash; and to celebrate, I&rsquo;m throwing a yacht party in Miami to kick off NANOG&nbsp;98.</div>
+    <div class="serif t-body" style="font-size:17px;line-height:29px;color:#C7D0D6;padding-top:16px;">Come aboard <em>The Venetian Lady</em> for a sunset cruise through the skyline &mdash; an open bar, hors d&rsquo;oeuvres and a DJ on deck, and the unofficial start to NANOG week. This one&rsquo;s for the whole community: new partners, old and new NANOG friends, and everyone who has helped us get off the ground.</div>
+  </td></tr>
+
+  <!-- gold flourish -->
+  <tr><td align="center" style="padding:34px 0 0;"><div style="width:44px;height:1px;line-height:1px;font-size:0;background-color:#D9A45F;">&nbsp;</div></td></tr>
+
+  <!-- DETAILS -->
+  <tr><td class="px" align="center" style="padding:30px 48px 0;text-align:center;">
+    <div class="disp t-venue" style="font-size:34px;line-height:40px;color:#F4F1EA;">The Venetian Lady</div>
+    <div class="sans" style="font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#8FA6AE;line-height:18px;padding-top:9px;">Miami, Florida</div>
+    <div class="serif" style="font-size:19px;line-height:26px;color:#F4F1EA;padding-top:20px;">Sunday, October 18, 2026</div>
+    <div class="sans" style="font-size:13px;letter-spacing:1px;line-height:22px;color:#9BA6AC;padding-top:9px;">Boarding&nbsp;6:30&nbsp;PM<span style="color:#D9A45F;">&nbsp;&nbsp;&middot;&nbsp;&nbsp;</span>Cruising&nbsp;7:00&ndash;10:30&nbsp;PM</div>
+    <div class="sans" style="font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#D9A45F;line-height:18px;padding-top:18px;font-weight:bold;">Open bar all evening</div>
+  </td></tr>
+
+  <!-- divider -->
+  <tr><td style="padding:36px 48px 0;"><div style="height:1px;line-height:1px;font-size:0;background-color:#16303C;">&nbsp;</div></td></tr>
+
+  <!-- RSVP -->
+  <tr><td align="center" style="padding:38px 24px 0;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;"><tr>
+      <td align="center" bgcolor="#D9A45F" style="background-color:#D9A45F;border-radius:2px;">
+        <a href="https://cncrm.thechiefnegotiators.com/rsvp.html?e=venetian-lady-2026-10-18&first={{first_name}}&last={{last_name}}&email={{email}}&company={{company}}" target="_blank" class="sans" style="display:block;padding:18px 66px;font-size:14px;font-weight:bold;letter-spacing:5px;text-transform:uppercase;text-decoration:none;color:#021118;">RSVP</a>
+      </td>
+    </tr></table>
+  </td></tr>
+
+  <!-- NANOG register -->
+  <tr><td align="center" style="padding:26px 24px 0;text-align:center;">
+    <a href="https://nanog.org/events/nanog-98/register/" target="_blank" class="sans" style="font-size:14px;letter-spacing:1px;text-decoration:none;"><span style="color:#D9A45F;border-bottom:1px solid #6B5427;padding-bottom:4px;">Register for NANOG&nbsp;98&nbsp;&nbsp;&rarr;</span></a>
+  </td></tr>
+  <tr><td class="px" align="center" style="padding:22px 56px 0;text-align:center;">
+    <div class="serif" style="font-style:italic;font-size:15px;line-height:25px;color:#8B969C;">Attending NANOG or not, you&rsquo;re welcome aboard &mdash; and if you can make the meeting, I&rsquo;d love for you to register and join us for the week.</div>
+  </td></tr>
+
+  <!-- SIGN-OFF -->
+  <tr><td class="px" align="center" style="padding:40px 48px 46px;text-align:center;">
+    <div class="disp" style="font-size:23px;line-height:30px;color:#F4F1EA;">See you on the water,</div>
+    <div class="disp" style="font-size:26px;line-height:32px;color:#F4F1EA;padding-top:8px;">Amanda Ferrer</div>
+    <div class="sans" style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#7E8990;line-height:18px;padding-top:12px;">Founder&nbsp;&middot;&nbsp;The Chief Negotiators</div>
+  </td></tr>
+
+</table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;"><tr><td align="center" class="sans" style="padding:22px 20px 30px;font-size:11px;line-height:17px;color:#63727A;text-align:center;">The Chief Negotiators&nbsp;&middot;&nbsp;St. Petersburg, Florida<br>You&rsquo;re receiving this because we&rsquo;ve worked together or corresponded. <a href="{{unsubscribe_url}}" style="color:#8B7338;text-decoration:underline;">Unsubscribe</a></td></tr></table>
+</td></tr></table>
 </body></html>
