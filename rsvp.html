@@ -6,16 +6,16 @@
 <title>RSVP · The Chief Negotiators</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;1,6..96,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0E0D10;--sheet:#141216;--frame:#3A2C1F;--rule:#4A3826;--ink:#F4ECDE;--body:#E6DCCB;--mute:#BFB3A0;--foot:#A89B88;--gold:#D9A066;--glow:rgba(217,160,102,.45);--wash:rgba(217,160,102,.08);--err:#E88B7A;--serif:Georgia,'Times New Roman',serif;--mono:'JetBrains Mono','SFMono-Regular',Menlo,Consolas,monospace}
+:root{--bg:#021118;--sheet:#021118;--frame:#17323F;--rule:#1E3B49;--ink:#F4F1EA;--body:#D5DCE0;--mute:#A9B4BA;--foot:#8E9CA4;--gold:#D9A45F;--glow:rgba(217,164,95,.45);--wash:rgba(217,164,95,.08);--err:#E88B7A;--serif:Georgia,'Times New Roman',serif;--mono:'JetBrains Mono','SFMono-Regular',Menlo,Consolas,monospace}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--body);font-family:var(--serif)}
 a{color:var(--gold)}a:hover{color:var(--ink)}
 .page{max-width:640px;margin:0 auto;padding:24px 16px 40px}
 .sheet{background:var(--sheet);border:1px solid var(--frame)}
 .px{padding-left:44px;padding-right:44px}
 .mast{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-top:26px;padding-bottom:22px}
-.brand{font-size:15px;letter-spacing:4px;color:var(--ink)}.brand span{color:var(--gold)}
+.logo{display:block;width:190px;max-width:55vw;height:auto}.sheet{background:linear-gradient(180deg,#0A2638,var(--sheet) 420px)}
 .mono{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--gold);text-transform:uppercase}
 .hero{display:block;width:100%;height:auto;animation:fade 1.2s ease-out both}
 .status{display:flex;justify-content:space-between;gap:12px;padding-top:16px;color:var(--mute)}
@@ -23,7 +23,7 @@ a{color:var(--gold)}a:hover{color:var(--ink)}
 .typed{margin-top:30px;font-family:var(--mono);font-size:12px;letter-spacing:4px;color:var(--gold)}
 .typed .t{display:inline-block;overflow:hidden;white-space:nowrap;vertical-align:bottom;animation:type 1.4s steps(16,end) .3s both}
 .typed .c{animation:blink 1s step-end infinite}
-h1{margin:12px 0 0;font-weight:normal;font-size:44px;line-height:1.1;color:var(--ink);text-wrap:balance;animation:rise .8s ease-out 1.2s both}
+h1{margin:12px 0 0;font-family:Didot,'Bodoni 72','Bodoni Moda','Bodoni MT',Georgia,serif;font-style:italic;font-weight:400;font-size:46px;line-height:1.1;color:var(--ink);text-wrap:balance;animation:rise .8s ease-out 1.2s both}
 .lede{margin:16px 0 0;font-size:18px;line-height:1.6;text-wrap:pretty;animation:rise .8s ease-out 1.5s both}
 .facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:28px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
 .facts>div{padding:18px 12px}.facts>div:first-child{padding-left:0}.facts>div+div{border-left:1px solid var(--rule)}
@@ -34,7 +34,7 @@ label{display:grid;gap:8px}
 input,textarea{width:100%;background:transparent;border:0;border-bottom:1px solid var(--rule);color:var(--ink);font:17px/1.4 var(--serif);padding:8px 0 10px;border-radius:0;outline:none;transition:border-color .2s}
 textarea{resize:vertical;min-height:64px}
 input:focus,textarea:focus{border-bottom-color:var(--gold)}
-input::placeholder,textarea::placeholder{color:#6f6556;font-style:italic}
+input::placeholder,textarea::placeholder{color:#5E6E77;font-style:italic}
 .opt{color:var(--foot)}
 .choice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .choice input{position:absolute;opacity:0;pointer-events:none}
@@ -49,17 +49,11 @@ input::placeholder,textarea::placeholder{color:#6f6556;font-style:italic}
 .fine{margin:0;text-align:center;font-style:italic;font-size:15px;color:var(--mute)}
 .scan{height:1px;margin-top:36px;background:var(--frame) linear-gradient(90deg,var(--frame),var(--gold),var(--frame)) no-repeat;background-size:50% 1px;animation:scan 3.2s linear infinite}
 .foot{padding-top:22px;padding-bottom:28px;text-align:center}
-.after{text-align:center;padding:10px 0 4px;color:#8C8272;font:11px/1.6 Helvetica,Arial,sans-serif}
+.after{text-align:center;padding:10px 0 4px;color:#7C8A92;font:11px/1.6 Helvetica,Arial,sans-serif}
 .done{display:none;padding-top:30px;padding-bottom:10px}
 .done .acts{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:28px}
 .ghost{display:inline-flex;align-items:center;min-height:48px;padding:0 24px;border:1px solid var(--gold);border-radius:40px;color:var(--gold);text-decoration:none;font:13px var(--mono);letter-spacing:2px;cursor:pointer;background:none}
 .ghost:hover{background:var(--wash);color:var(--ink)}
-.reg{margin-top:28px;padding:20px 0 0;border-top:1px solid var(--rule)}
-.reg .regk{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--gold);text-transform:uppercase}
-.reg .regnote{margin:8px 0 16px;font-size:15px;line-height:1.6;color:var(--mute);text-wrap:pretty}
-.regacts{display:flex;flex-wrap:wrap;gap:12px}
-.regbtn{display:inline-flex;align-items:center;min-height:48px;padding:0 26px;border-radius:40px;background:var(--gold);color:var(--bg);text-decoration:none;font:bold 13px var(--mono);letter-spacing:2px}
-.regbtn:hover{background:#E6B27E;color:var(--bg)}
 .sent .done{display:block}.sent .form-wrap{display:none}
 @keyframes type{from{max-width:0}to{max-width:320px}}@keyframes blink{50%{opacity:0}}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}}@keyframes fade{from{opacity:0}}
@@ -74,7 +68,7 @@ input::placeholder,textarea::placeholder{color:#6f6556;font-style:italic}
 <div class="page">
 <div class="banner" id="banner" hidden>Preview · this event isn't live yet</div>
 <main class="sheet" id="sheet">
-<div class="mast px"><div class="brand">THE CHIEF <span>NEGOTIATORS</span></div><div class="mono">Private invitation</div></div>
+<div class="mast px"><img class="logo" src="assets/email/logo-cn-reversed.png" width="190" alt="The Chief Negotiators"><div class="mono">By invitation only</div></div>
 <img class="hero" id="hero" src="assets/email/event-yacht-hero.jpg" width="1200" height="675" alt="">
 <div class="status px mono"><span style="color:var(--mute)"><span class="dot">&#9679;</span>&nbsp; <span id="statusLine">Guest list open</span></span><span id="tminus"></span></div>
 <section class="closed px" id="closed" hidden><div class="typed"><span class="t">&gt; ACCESS CLOSED</span><span class="c">_</span></div><h1 id="closedTitle">Replies are closed.</h1><p class="lede" id="closedLine">This guest list is no longer taking replies. If you think that's a mistake, reply to your invitation email.</p></section>
@@ -86,14 +80,6 @@ input::placeholder,textarea::placeholder{color:#6f6556;font-style:italic}
 <div><div class="mono">Date</div><div class="v" id="fDate"></div></div>
 <div><div class="mono">Time</div><div class="v" id="fTime"></div></div>
 <div><div class="mono">Venue</div><div class="v" id="fVenue"></div></div>
-</div>
-<div class="reg" id="reg" hidden>
-<div class="regk" id="regKicker">NANOG 98</div>
-<p class="regnote" id="regNote"></p>
-<div class="regacts">
-<a class="regbtn" id="regBtn" target="_blank" rel="noopener">Register for NANOG 98</a>
-<a class="ghost" id="socialBtn" target="_blank" rel="noopener" hidden>Socials only</a>
-</div>
 </div>
 <form id="rsvp" novalidate>
 <div>
@@ -136,9 +122,9 @@ input::placeholder,textarea::placeholder{color:#6f6556;font-style:italic}
 <script>
 (function(){
 var SB="https://stpkhpxhqzgruorrupaw.supabase.co",KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0cGtocHhocXpncnVvcnJ1cGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDMxNjYsImV4cCI6MjA5NDY3OTE2Nn0.1TjVRSpoNGTk6cs4cR2CA3vxAD3aLTTkNZW0IYgkkws";
-var ACC={gold:"#D9A066",platinum:"#C9D1D9",ice:"#6FC3DF",ember:"#E07A5F"};
+var ACC={gold:"#D9A45F",platinum:"#C9D1D9",ice:"#6FC3DF",ember:"#E07A5F"};
 var MON=["January","February","March","April","May","June","July","August","September","October","November","December"],DAY=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-var FALLBACK={id:"venetian-lady-2026-10-18",status:"live",data:{name:"The Venetian Lady",kind:"Private evening",date:"2026-10-18",time:"6:30 PM",endTime:"10:00 PM",timeNote:"Boarding",venue:"The Venetian Lady",venueNote:"Miami, Florida",tz:"America/New_York",replyBy:"Kindly reply by October 10. Boarding details follow for confirmed guests.",hero:"assets/email/event-yacht-hero.jpg",accent:"gold",allowGuest:true,askDietary:true,rsvpTitle:"Reserve your place aboard.",rsvpLede:"A private evening on The Venetian Lady: sunset on the water, cocktails on deck, and a short guest list. Confirm below and we'll hold your place.",confirmLine:"Your place aboard is held. Boarding details and the dock location will follow by email."}};
+var FALLBACK={id:"venetian-lady-2026-10-18",status:"live",data:{v:4,name:"NANOG 98 Yacht Party",kind:"Yacht party",date:"2026-10-18",time:"7:00 PM",endTime:"10:30 PM",timeNote:"Boarding begins at 6:30 PM",venue:"Venetian Lady",venueNote:"Miami, FL",tz:"America/New_York",replyBy:"",hero:"assets/email/event-yacht-miami.jpg",accent:"gold",allowGuest:true,askDietary:true,rsvpTitle:"Reserve your place aboard.",rsvpLede:"Let's kick off NANOG with fellow infrastructure leaders, partners and industry friends for a night of great conversation, drinks and Miami views.",confirmLine:"Your place aboard is held. The exact boarding location and details will follow by email."}};
 var q=new URLSearchParams(location.search),KEYID=q.get("e")||FALLBACK.id;
 var $=function(id){return document.getElementById(id)};
 var f=$("rsvp"),msg=$("msg"),go=$("go"),sheet=$("sheet"),EV=null,LS;
@@ -146,7 +132,9 @@ function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return
 function pd(s){var m=String(s||"").match(/^(\d{4})-(\d{2})-(\d{2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):null}
 function hhmm(t){var m=String(t||"").match(/(\d{1,2})(?::(\d{2}))?\s*([ap])?/i);if(!m)return null;var h=+m[1]%12;if(m[3]&&/p/i.test(m[3]))h+=12;if(!m[3]&&+m[1]===12)h=12;return(h<10?"0":"")+h+(m[2]||"00")+"00"}
 function hexA(hex,a){var n=parseInt(hex.slice(1),16);return"rgba("+(n>>16&255)+","+(n>>8&255)+","+(n&255)+","+a+")"}
-function localEvent(id){try{var l=JSON.parse(localStorage.getItem("cn_events_v1")||"[]");return l.find(function(x){return x.id===id})||null}catch(e){return null}}
+function stale(d){return !d||(d.v||0)<4}
+function localEvent(id){try{var l=JSON.parse(localStorage.getItem("cn_events_v1")||"[]");var e=l.find(function(x){return x.id===id})||null;
+if(e&&id===FALLBACK.id&&stale(e.data))e=Object.assign({},e,{data:Object.assign({},e.data||{},FALLBACK.data)});return e}catch(x){return null}}
 function load(){
 return fetch(SB+"/rest/v1/events?id=eq."+encodeURIComponent(KEYID)+"&select=id,status,data",{headers:{apikey:KEY,Authorization:"Bearer "+KEY}})
 .then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(rows){
@@ -164,10 +152,9 @@ var x=pd(d.date);
 $("title").textContent=d.rsvpTitle||"Reserve your place.";
 $("lede").textContent=d.rsvpLede||("A "+(d.kind||"private event").toLowerCase()+(d.venue?" at "+d.venue:"")+". Confirm below and we'll hold your place.");
 $("fDate").innerHTML=x?DAY[x.getDay()]+"<br>"+MON[x.getMonth()]+" "+x.getDate()+", "+x.getFullYear():"To be confirmed";
-$("fTime").innerHTML=esc(d.time||"TBC")+(d.timeNote?"<br><i>"+esc(d.timeNote)+"</i>":"");
+$("fTime").innerHTML=esc([d.time||"TBC",d.endTime].filter(Boolean).join(" – "))+(d.timeNote?"<br><i>"+esc(d.timeNote)+"</i>":"");
 $("fVenue").innerHTML=esc(d.venue||"TBC")+(d.venueNote?"<br><i>"+esc(d.venueNote)+"</i>":"");
 $("replyBy").textContent=d.replyBy||"";
-if(d.registerUrl){$("reg").hidden=false;$("regBtn").href=d.registerUrl;$("regBtn").textContent=d.registerLabel||"Register for NANOG 98";$("regKicker").textContent=d.registerKicker||"NANOG 98";$("regNote").textContent=d.registerNote||"";if(d.socialsUrl){$("socialBtn").hidden=false;$("socialBtn").href=d.socialsUrl;$("socialBtn").textContent=d.socialsLabel||"Socials only";}}
 if(x){var t=new Date();t.setHours(0,0,0,0);var n=Math.round((x-t)/864e5);$("tminus").innerHTML=n>0?"T&minus;"+n+(n===1?" day":" days"):"";}
 if(d.allowGuest===false)$("guestField").hidden=true;
 if(d.askDietary===false)$("dietField").hidden=true;
