@@ -1,0 +1,62 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connect Outlook · The Chief Negotiators</title>
+<meta name="robots" content="noindex">
+<style>
+  html,body{margin:0;background:#021118;color:#D5DCE0;font:16px/1.6 Georgia,'Times New Roman',serif;min-height:100%}
+  .wrap{max-width:540px;margin:0 auto;padding:64px 24px;text-align:center}
+  h2{color:#F4F1EA;font-weight:400;font-size:26px;margin:0 0 6px}
+  .mut{color:#8FA6AE;font-size:13px}
+  .btn{display:inline-block;margin-top:24px;background:#D9A45F;color:#021118;text-decoration:none;border:0;cursor:pointer;
+       font:bold 13px 'Helvetica Neue',Arial,sans-serif;letter-spacing:3px;text-transform:uppercase;padding:16px 40px;border-radius:40px}
+  .err{margin-top:22px;color:#E88B7A;font:13px 'Helvetica Neue',Arial,sans-serif;word-break:break-word}
+  .ok{color:#7FC6A0}
+  code{color:#D9A45F;font-size:12px}
+</style></head>
+<body><div class="wrap">
+  <h2 id="title">Connecting your Outlook…</h2>
+  <p class="mut" id="msg">One moment — taking you to Microsoft to sign in.</p>
+  <a class="btn" id="go" href="#" style="display:none">Sign in with Microsoft</a>
+  <a class="btn" id="back" href="/?tab=inbox" style="display:none;background:none;border:1px solid #D9A45F;color:#D9A45F">Back to the CRM</a>
+  <div class="err" id="err"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.1/lib/msal-browser.min.js"></script>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  function fail(m){ $("title").textContent="Couldn't connect"; $("msg").style.display="none";
+    $("err").textContent=String(m); $("go").style.display="inline-block"; $("go").textContent="Try again"; $("back").style.display="inline-block"; }
+  if(!window.msal){ fail("Microsoft library failed to load. Check your connection and reload."); return; }
+  var pca = new msal.PublicClientApplication({
+    auth: {
+      clientId: "add7572c-ae7a-4668-bd9d-2f15d27f935e",
+      authority: "https://login.microsoftonline.com/common",
+      redirectUri: "https://cncrm.thechiefnegotiators.com/outlook-login.html"
+    },
+    cache: { cacheLocation: "localStorage", storeAuthStateInCookie: false }
+  });
+  var SCOPES = ["User.Read","Mail.Read","Mail.Send"];
+  function connected(acc){
+    try{ pca.setActiveAccount(acc); }catch(e){}
+    $("title").innerHTML="✓ Outlook connected";
+    $("title").className="ok";
+    $("msg").style.display="block";
+    $("msg").innerHTML="Signed in as <b style='color:#F4F1EA'>"+(acc.username||"your account")+"</b>. It's saved to this browser — head back and the bar will show connected.";
+    $("go").style.display="none";
+    $("back").style.display="inline-block";
+  }
+  pca.initialize().then(function(){
+    return pca.handleRedirectPromise();
+  }).then(function(res){
+    if(res && res.account){ connected(res.account); return; }
+    var accts = pca.getAllAccounts();
+    if(accts && accts.length){ connected(accts[0]); return; }
+    // no account yet → start the sign-in (full-page redirect, no popup to block)
+    $("go").style.display="inline-block";
+    $("go").textContent="Sign in with Microsoft";
+    $("go").onclick=function(e){ e.preventDefault(); pca.loginRedirect({ scopes: SCOPES, prompt: "select_account" }); };
+    setTimeout(function(){ pca.loginRedirect({ scopes: SCOPES, prompt: "select_account" }).catch(fail); }, 500);
+  }).catch(fail);
+})();
+</script>
+</body></html>
