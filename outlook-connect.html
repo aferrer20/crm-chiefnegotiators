@@ -1,0 +1,36 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connect Outlook · The Chief Negotiators</title>
+<meta name="robots" content="noindex">
+<style>html,body{margin:0;background:#021118;color:#D5DCE0;font:16px/1.6 Georgia,serif;height:100%}
+.wrap{max-width:520px;margin:0 auto;padding:64px 24px;text-align:center}
+a.btn{display:inline-block;margin-top:22px;background:#D9A45F;color:#021118;text-decoration:none;font:bold 13px 'Helvetica Neue',Arial,sans-serif;letter-spacing:3px;text-transform:uppercase;padding:16px 40px;border-radius:40px}
+.mute{color:#8FA6AE;font-size:13px;margin-top:26px}</style></head>
+<body><div class="wrap">
+<h2 style="color:#F4F1EA;font-weight:400">Connecting your Outlook…</h2>
+<p id="msg">Redirecting you to Microsoft to sign in. If it doesn't move automatically, tap the button.</p>
+<a class="btn" id="go" href="#">Continue to Microsoft</a>
+<div class="mute">You'll return to the CRM once you approve access.</div>
+</div>
+<script>
+(function(){
+  var state = btoa(JSON.stringify({
+    uid:  "d460abdd-c638-41cd-9c31-dd7af52261a6",
+    email:"amanda@thechiefnegotiators.com",
+    ret:  "https://cncrm.thechiefnegotiators.com/?tab=inbox"
+  }));
+  var p = new URLSearchParams({
+    client_id:"add7572c-ae7a-4668-bd9d-2f15d27f935e",
+    response_type:"code",
+    response_mode:"query",
+    redirect_uri:"https://stpkhpxhqzgruorrupaw.supabase.co/functions/v1/outlook-callback",
+    scope:"openid profile offline_access User.Read Mail.Read Mail.Send",
+    prompt:"select_account",
+    state:state
+  });
+  var url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?" + p.toString();
+  document.getElementById("go").href = url;
+  setTimeout(function(){ location.href = url; }, 600);
+})();
+</script>
+</body></html>
