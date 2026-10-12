@@ -190,7 +190,8 @@ async function run(onlyId: string | null) {
     candidates.push({ conv, list, last, rep, attempt, to });
   }
 
-  for (const c of candidates) {
+  // A rep waiting on "Rewrite with AI" should not sit through the whole sweep.
+  if (!onlyId) for (const c of candidates) {
     const toRec = (c.last.to_list || []).find((r: any) => String(r.email || "").toLowerCase() === String(c.to).toLowerCase()) || {};
     const contact = contactByEmail.get(String(c.to).toLowerCase());
     const toName = (contact && contact.name) || toRec.name || "";
@@ -211,6 +212,26 @@ async function run(onlyId: string | null) {
     created++;
   }
 
+  // Backlog upgrade: anything drafted from the template (before the key was
+  // set, or past a run's AI budget) is rewritten with AI as budget allows, so
+  // the queue converges on AI drafts without anyone clicking.
+  let upgraded = 0;
+  if (client && !onlyId && ai < MAX_AI_PER_RUN) {
+    const backlog = await sel(`follow_ups?status=eq.pending&draft_source=eq.template&select=*&order=due_at.asc&limit=${MAX_AI_PER_RUN - ai}`);
+    for (const f of backlog) {
+      const list = byConv.get(f.conversation_id) || [];
+      if (!list.length) continue;
+      const rep: any = repById.get(String(f.rep_id)) || {};
+      let attempt = 0;
+      for (let i = list.length - 1; i >= 0 && list[i].direction === "out"; i--) attempt++;
+      const ctx = { repName: rep.name || "", toName: f.to_name || "", company: (f.account_id && acctName.get(String(f.account_id))) || "", attempt: attempt || 1, thread: list.slice(-6), lastSubject: f.last_subject || "" };
+      try {
+        const text = await aiDraft(client, ctx);
+        if (text) { await write("PATCH", `follow_ups?id=eq.${f.id}&draft_source=eq.template`, { draft_text: text, draft_source: "ai", updated_at: new Date().toISOString() }); upgraded++; ai++; }
+      } catch (_) { /* keep the template */ }
+    }
+  }
+
   // Single re-draft on request.
   let redrafted = null;
   if (onlyId) {
@@ -228,7 +249,7 @@ async function run(onlyId: string | null) {
       redrafted = { id: f.id, draft_text: text, draft_source: source };
     }
   }
-  return { ok: true, aiEnabled: !!client, candidates: candidates.length, created, ai, skipped, resolved: stale.length, redrafted };
+  return { ok: true, aiEnabled: !!client, candidates: candidates.length, created, ai, upgraded, skipped, resolved: stale.length, redrafted };
 }
 
 Deno.serve(async (req) => {
