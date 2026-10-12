@@ -32,11 +32,15 @@ const VENDOR = new Set([
   "linkedin.com", "slack.com", "notion.so", "dropbox.com", "box.com", "wetransfer.com", "loom.com", "typeform.com", "eventbrite.com",
   "gong.io", "fireflies.ai", "otter.ai", "fathom.video", "read.ai", "tldv.io", "stripe.com", "paypal.com", "intuit.com", "xero.com",
   "atlassian.net", "github.com", "zendesk.com", "intercom.io", "intercom-mail.com", "salesforce.com", "pandadoc.com", "adobesign.com", "echosign.com",
-  "facebookmail.com", "medium.com", "substack.com",
+  "facebookmail.com", "medium.com", "substack.com", "formsubmit.co", "supabase.com", "supabase.io", "vercel.com",
   ...list(Deno.env.get("EMAIL_SYNC_BLOCK_DOMAINS")),
 ]);
 const NOREPLY = /^(no-?reply|do-?not-?reply|donotreply|noreply[-.\w]*|notifications?|notify|mailer-daemon|postmaster|bounces?|alerts?|newsletters?|news|updates|marketing|automated|system|calendar|invites?)([+._-].*)?$/i;
-const NOTIFY_HOST = /^(notifications?|notify|alerts?|mail|mailer|mailing|email|e|em\d*|bounces?|news(letters?)?|marketing|updates|info|send(er)?|sg|mc|cmail\d*|mta\d*|smtp|msg|messages?|comms|noreply|no-reply|reply|transactional|campaigns?|engage|hello)\./i;
+const NOTIFY_HOST = /^(notifications?|notify|alerts?|mail\d*|mailer|mailing|email|e|m|mg|em\d*|bounces?|news(letters?)?|marketing|updates|info|send(er)?|sg|mc|cmail\d*|mta\d*|smtp|msg|messages?|comms|noreply|no-reply|reply|transactional|campaigns?|engage|hello)\./i;
+// Automated mailboxes that carry a brand prefix (microsoft-noreply@,
+// workspace-noreply@) or are product mail rather than a person.
+const NOREPLY_ANY = /(^|[._+-])(no-?reply|do-?not-?reply|donotreply)([._+-]|$)/i;
+const SYSTEM_LOCAL = /^(welcome|submissions?|verify|verification|identity|identitycheck|onboarding-noreply|receipts?|statements?)([+._-].*)?$/i;
 const INVITE_SUBJ = /^\s*(accepted|declined|tentative(ly accepted)?|canceled|cancelled|updated invitation|invitation|new time proposed)\s*:/i;
 const AUTO_SUBJ = /^\s*(automatic reply|auto(matic)?[- ]?reply|out of (the )?office|ooo\b|undeliverable|delivery status notification|mail delivery (failed|subsystem)|returned mail|read:|not read:)/i;
 const REPLY_SUBJ = /^\s*(re|aw|antw|rv|ref|sv)\s*:/i;
@@ -64,7 +68,7 @@ function excludedAddress(addr: string, repEmails: Set<string>) {
   // email.stripe.com, mail.linkedin.com…) even when the parent company is a
   // real prospect, so the subdomain decides, not the brand.
   if (host !== dom && NOTIFY_HOST.test(host)) return "vendor";
-  if (NOREPLY.test(local)) return "noreply";
+  if (NOREPLY.test(local) || NOREPLY_ANY.test(local) || SYSTEM_LOCAL.test(local)) return "noreply";
   return "";
 }
 function nameFromDomain(dom: string) {
