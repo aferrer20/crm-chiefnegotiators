@@ -1,6 +1,6 @@
 Hi {{first_name}},
 
-NANOG 98 opens Monday, and tonight we set sail from Bayside Pier 1 for The Chief Negotiators' official NANOG 98 kickoff. I'm so glad you're coming aboard.
+Tonight we set sail from Bayside Pier 1 for The Chief Negotiators' official NANOG 98 kickoff, and I'm so glad you're coming aboard.
 
 The Chief Negotiators is six months old, and we built it on one belief: the best deals in this industry start with the right introduction. So instead of another dinner, we chartered a yacht and invited the people we most wanted in one place. You're one of them.
 
