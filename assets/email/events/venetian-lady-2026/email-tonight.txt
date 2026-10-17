@@ -2,6 +2,10 @@ Hi {{first_name}},
 
 Tonight's the night. We set sail from Bayside Pier 1 at sunset to kick off NANOG 98, and I'm so glad you're coming aboard.
 
+The Chief Negotiators is six months old, and we built it on one belief: the best deals in this industry start with the right introduction. So instead of another dinner, we chartered a yacht and invited the people we most wanted in one place. You're one of them.
+
+Here is your pass and everything you need to find us.
+
 YOUR PASS
 On the list: {{passengers}} (admit {{admit}})
 Vessel: The Venetian Lady
