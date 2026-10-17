@@ -1,0 +1,38 @@
+Hi {{first_name}},
+
+NANOG 98 lands in Miami this week, and on Sunday night we're opening it the only way Miami should: on the water, at sunset, with the skyline lit up behind us.
+
+The Chief Negotiators is six months old. We built this firm on one belief: the best deals in this industry start with the right introduction. So instead of another booth, we chartered a yacht and invited the people we most wanted in one place. You're one of them.
+
+YOUR BOARDING PASS
+Passenger: {{passengers}} (admit {{admit}})
+Vessel: The Venetian Lady
+Pier: Bayside Pier 1
+Boarding: Sunday, October 18, 6:30 PM
+Departs: 7:15 PM sharp
+
+WHO'S ON BOARD
+Teams from Amazon Web Services, NVIDIA, Nokia, NTT DATA, 1Finity, Megaport, Flexential, H5 Data Centers, Telehouse, Legrand, China Unicom Americas, Telxius, EXA Infrastructure, Edgevana, Gcore, DRFortress, XKL, PacketLight, C3ntro Telecom, 1547 Realty, Bentaus, Bitred, Parinita AI and Supertrace.AI.
+
+WHO DO YOU WANT TO MEET?
+Reply with a name, a company or the kind of partner you're looking for. We'll make the introduction in person on deck.
+
+THE NIGHT
+6:30 PM  Boarding at Bayside Pier 1
+7:15 PM  We cast off. The boat won't wait, so be on board
+Sunset   Open bar, hors d'oeuvres and a DJ on deck
+10:30 PM Back ashore at Bayside
+
+GETTING THERE
+We will be docked at Bayside Pier 1, Bayside Marketplace, 401 Biscayne Blvd, Miami.
+Driving? Parking is available at the Marketplace garage, about a 15-minute walk from the dock.
+Being dropped off? The load-in/load-out zone next to the Ferris wheel and Margaritaville at Bayside is the closest point, about a 5-minute walk to the dock.
+Full driving directions: https://stpkhpxhqzgruorrupaw.supabase.co/storage/v1/object/public/email-assets/events/venetian-lady-2026/bayside-pier-1-directions.jpg
+Google Maps: https://www.google.com/maps/search/?api=1&query=Bayside+Marketplace+401+Biscayne+Blvd+Miami+FL+33132
+
+Running late or plans changed? Just reply to this email. Otherwise, I'll see you at the gangway.
+
+Amanda Ferrer
+Founder, The Chief Negotiators
+
+Unsubscribe: {{unsubscribe_url}}
