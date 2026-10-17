@@ -1,0 +1,37 @@
+Hi {{first_name}},
+
+Tonight we set sail from Bayside Pier 1 for The Chief Negotiators' official NANOG 98 kickoff, and I'm so glad you're coming aboard.
+
+The Chief Negotiators is six months old, and we built it on one belief: the best deals in this industry start with the right introduction. So instead of another dinner, we chartered a yacht and invited the people we most wanted in one place. You're one of them.
+
+Here is your pass and everything you need to find us.
+
+YOUR PASS
+On the list: {{passengers}} (admit {{admit}})
+Vessel: The Venetian Lady
+Pier: Bayside Pier 1
+Boarding: 6:30 PM
+We depart: 7:15 PM sharp
+Ashore: 10:30 PM
+
+GETTING THERE
+We will be docked at Bayside Pier 1.
+Driving? Parking is available at the Marketplace garage, about a 15-minute walk from the dock.
+Being dropped off? The load-in/load-out zone next to the Ferris wheel and Margaritaville at Bayside is the closest point, about a 5-minute walk to the dock.
+Map: https://www.google.com/maps/search/?api=1&query=Bayside+Marketplace+401+Biscayne+Blvd+Miami+FL+33132
+
+TONIGHT
+6:30 PM  Boarding opens at Bayside Pier 1
+7:15 PM  We leave the dock, so please be on board by then
+On deck  Open bar, hors d'oeuvres and a DJ as the Miami skyline lights up
+10:30 PM Back ashore at Bayside
+
+One more thing: if there is someone you'd like to meet tonight, reply and tell me who. I'll make the introduction on deck.
+
+Running late or plans changed? Just reply to this email. See you at the gangway.
+
+Amanda Ferrer
+Founder, The Chief Negotiators
+
+You're receiving this because you RSVP'd to The Chief Negotiators' NANOG 98 kickoff cruise on October 18.
+Unsubscribe: {{unsubscribe_url}}
