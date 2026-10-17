@@ -10,7 +10,9 @@
 //   design.live_campaign_id the campaign id for the real send
 //   design.live_approved    must be true for a live send (set in the DB once
 //                           the send has been signed off)
-// A live send is one-shot: if the campaign id already exists, it refuses.
+//   design.owner_rep_id     optional: the rep the send counts for
+// A live send is one-shot: once the campaign id exists it refuses, unless the
+// earlier attempt delivered nothing (status "error"), which may be retried.
 //
 // POST { template_id, mode: "test" | "live" }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -65,12 +67,32 @@ Deno.serve(async (req) => {
     recipients = [{ email: d.test_to, ctx: d.test_ctx || { first_name: "Amanda" } }];
   } else {
     if (d.live_approved !== true) return json({ error: "live send not approved on this template" }, 403);
-    const { data: prior } = await sb.from("campaigns").select("id,status").eq("id", d.live_campaign_id).maybeSingle();
-    if (prior) return json({ error: "already sent", campaign: prior }, 409);
     campaignId = String(d.live_campaign_id);
+    // Claim the send atomically: the insert succeeds for exactly one caller, so
+    // an overlapping run can never mail the list twice. A previous attempt that
+    // delivered nothing (status "error") may be claimed again for a retry.
+    const claim = {
+      id: campaignId, name: t.name, subject, from_name: fromName, preheader: t.preheader, body: t.body,
+      status: "sending", sent_at: new Date().toISOString(), error_message: null,
+      ...(d.owner_rep_id ? { owner_id: String(d.owner_rep_id) } : {}),
+    };
+    const { error: insErr } = await sb.from("campaigns").insert(claim);
+    if (insErr) {
+      const { data: retried } = await sb.from("campaigns").update(claim)
+        .eq("id", campaignId).eq("status", "error").select("id");
+      if (!retried || !retried.length) {
+        const { data: prior } = await sb.from("campaigns").select("id,status").eq("id", campaignId).maybeSingle();
+        return json({ error: "already sent or in progress", campaign: prior }, 409);
+      }
+    }
 
     // Suppression: never mail an address or contact on the opt-out list.
-    const { data: outs } = await sb.from("email_optouts").select("email,contact_id");
+    // Fail closed: if the list can't be read, send nothing (and allow a retry).
+    const { data: outs, error: outErr } = await sb.from("email_optouts").select("email,contact_id");
+    if (outErr) {
+      await sb.from("campaigns").update({ status: "error", error_message: `opt-out list unreadable: ${outErr.message}` }).eq("id", campaignId);
+      return json({ error: "could not read the opt-out list; nothing was sent" }, 500);
+    }
     const byEmail = new Set((outs || []).map((o: any) => String(o.email || "").toLowerCase()));
     const byId = new Set((outs || []).map((o: any) => String(o.contact_id || "")).filter(Boolean));
     recipients = d.recipients.filter((r: any) => {
@@ -78,10 +100,7 @@ Deno.serve(async (req) => {
       if (out) skipped.push(r.email);
       return !out;
     });
-    await sb.from("campaigns").upsert({
-      id: campaignId, name: t.name, subject, from_name: fromName, preheader: t.preheader, body: t.body,
-      status: "sending", recipient_count: recipients.length, sent_at: new Date().toISOString(),
-    });
+    await sb.from("campaigns").update({ recipient_count: recipients.length }).eq("id", campaignId);
   }
 
   const from = `"${fromName}" <${RESEND_FROM}>`;
@@ -106,11 +125,14 @@ Deno.serve(async (req) => {
   const sent: { r: any; id: string | null }[] = [];
   const failures: any[] = [];
   for (let i = 0; i < payload.length; i += 100) {
-    const res = await fetch("https://api.resend.com/emails/batch", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify(payload.slice(i, i + 100)),
-    });
+    let res: Response;
+    try {
+      res = await fetch("https://api.resend.com/emails/batch", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify(payload.slice(i, i + 100)),
+      });
+    } catch (e) { failures.push({ batch: i / 100, error: String(e) }); continue; }
     const out = await res.json().catch(() => null);
     if (!res.ok) { failures.push({ batch: i / 100, status: res.status, error: out }); continue; }
     (out?.data || []).forEach((row: any, j: number) => sent.push({ r: recipients[i + j], id: row?.id || null }));
