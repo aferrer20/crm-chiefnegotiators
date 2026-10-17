@@ -4,7 +4,7 @@ Tomorrow evening The Venetian Lady sets sail from Bayside Pier 1 for The Chief N
 
 The Chief Negotiators is six months old, and I built it on one belief: the best deals in this industry start with the right introduction. So instead of another dinner, I chartered a yacht and invited the people I most wanted in one place. You're one of them.
 
-Here is your pass and everything you need to find me at the dock.
+Here is your pass and everything you need to find us at the dock.
 
 YOUR PASS
 On the list: {{passengers}} (admit {{admit}})
