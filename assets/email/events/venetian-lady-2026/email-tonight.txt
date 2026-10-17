@@ -1,6 +1,6 @@
 Hi {{first_name}},
 
-Tonight's the night. We set sail from Bayside Pier 1 at sunset to kick off NANOG 98, and I'm so glad you're coming aboard.
+NANOG 98 opens Monday, and tonight we set sail from Bayside Pier 1 for The Chief Negotiators' official NANOG 98 kickoff. I'm so glad you're coming aboard.
 
 The Chief Negotiators is six months old, and we built it on one belief: the best deals in this industry start with the right introduction. So instead of another dinner, we chartered a yacht and invited the people we most wanted in one place. You're one of them.
 
@@ -33,5 +33,5 @@ Running late or plans changed? Just reply to this email. See you at the gangway.
 Amanda Ferrer
 Founder, The Chief Negotiators
 
-You're receiving this because you RSVP'd to The Chief Negotiators cruise on October 18.
+You're receiving this because you RSVP'd to The Chief Negotiators' NANOG 98 kickoff cruise on October 18.
 Unsubscribe: {{unsubscribe_url}}
