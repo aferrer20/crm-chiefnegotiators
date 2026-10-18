@@ -88,35 +88,27 @@ serve(async (req) => {
     const isHardBounce = evType === "bounced" && !/soft|transient|temporar|mailboxfull|undetermined/.test(bounceKind);
     const shouldSuppress = evType === "complained" || isHardBounce;
 
+    // email_optouts has exactly (email PK, contact_id, campaign_id, created_at).
+    // An earlier version wrote reason/detail columns that don't exist, so every
+    // suppression was rejected and dead addresses kept being mailed. Errors are
+    // now checked instead of swallowed.
+    //  - Hard bounce: block the ADDRESS only. A typo'd address the rep later
+    //    corrects must become mailable again, so no contact-level flag.
+    //  - Complaint: the person asked not to be mailed; block address + contact.
     if (shouldSuppress) {
-      const reason = evType === "complained" ? "complained" : "bounced";
-      const detail = evType === "complained" ? "Marked as spam by the recipient" : (bounceKind || "hard bounce");
-      try {
-        if (recipientEmail) {
-          await supa.from("email_optouts").upsert(
-            {
-              email: String(recipientEmail).toLowerCase(), contact_id: contactId || null,
-              campaign_id: campaignId || null, reason, detail,
-              created_at: new Date().toISOString(),
-            },
-            { onConflict: "email" },
-          );
-        } else if (contactId) {
-          const { data: existing } = await supa.from("email_optouts")
-            .select("id").eq("contact_id", contactId).maybeSingle();
-          if (!existing) {
-            await supa.from("email_optouts").insert({
-              contact_id: contactId, campaign_id: campaignId || null, reason, detail,
-              created_at: new Date().toISOString(),
-            });
-          }
-        }
-        if (contactId) {
-          const patch: Record<string, unknown> = { email_opt_out: true, email_opt_out_at: new Date().toISOString() };
-          patch[evType === "complained" ? "email_complained_at" : "email_bounced_at"] = new Date().toISOString();
-          await supa.from("contacts").update(patch).eq("id", contactId);
-        }
-      } catch (_) { /* suppression columns not migrated yet — the event still lands */ }
+      const complained = evType === "complained";
+      const addr = recipientEmail ? String(recipientEmail).toLowerCase() : "";
+      if (addr) {
+        const { error } = await supa.from("email_optouts").upsert(
+          { email: addr, contact_id: complained ? (contactId || null) : null, campaign_id: campaignId || null, created_at: new Date().toISOString() },
+          { onConflict: "email", ignoreDuplicates: !complained },
+        );
+        if (error) console.error("suppression failed", addr, error.message);
+      }
+      if (complained && contactId) {
+        const { error } = await supa.from("contacts").update({ email_opt_out: true, email_opt_out_at: new Date().toISOString() }).eq("id", contactId);
+        if (error) console.error("contact opt-out failed", contactId, error.message);
+      }
     }
 
     let row: Record<string, unknown> | null = null;
