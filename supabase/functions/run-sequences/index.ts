@@ -32,6 +32,15 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const FROM_EMAIL = Deno.env.get("RESEND_FROM") || "";
 const FROM_EMAIL_SSP = Deno.env.get("RESEND_FROM_SSP") || "";
+// Same deliverability settings as send-campaign: unsubscribe link on our own
+// domain, postal address in the footer, and a per-UTC-day send cap ("0" = off).
+const UNSUB_PAGE = Deno.env.get("UNSUBSCRIBE_PAGE") || "https://cncrm.thechiefnegotiators.com/unsubscribe.html";
+const POSTAL_ADDRESS = (Deno.env.get("SENDER_POSTAL_ADDRESS") || "").trim();
+const DAILY_CAP = (() => {
+  const v = (Deno.env.get("DAILY_SEND_CAP") || "").trim();
+  const n = v === "" ? 150 : Number(v);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+})();
 
 // Reconciliation budget per run. Resend allows ~2 requests/second; 40 lookups
 // at 550ms is ~22s, well inside the function's time limit, and a backlog
@@ -66,6 +75,40 @@ async function sbInsert(table: string, row: unknown) {
   if (!res.ok) throw new Error(`insert ${table} → ${res.status}: ${(await res.text()).slice(0, 200)}`);
 }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Real sends since 00:00 UTC (see send-campaign's sentToday).
+async function sentToday(): Promise<number> {
+  const since = new Date(); since.setUTCHours(0, 0, 0, 0);
+  const count = async (filter: string) => {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/campaign_events?select=type&type=eq.sent&occurred_at=gte.${encodeURIComponent(since.toISOString())}&${filter}`, {
+        headers: sbHeaders({ Prefer: "count=exact", Range: "0-0" }),
+      });
+      return Number((res.headers.get("content-range") || "").split("/")[1]) || 0;
+    } catch { return 0; }
+  };
+  const [hook, seq] = await Promise.all([count("raw->>type=eq.email.sent"), count("raw->>source=eq.run-sequences")]);
+  return Math.max(hook, seq);
+}
+
+const escHtml = (s: string) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+function htmlToText(html: string) {
+  return String(html || "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<head[\s\S]*?<\/head>/gi, "")
+    .replace(/<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, (_m, href, label) => {
+      const t = String(label).replace(/<[^>]+>/g, "").trim();
+      return t && !/^https?:/i.test(t) ? `${t} (${href})` : href;
+    })
+    .replace(/<\/(p|div|tr|h[1-6])>/gi, "\n\n").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/\n{3,}/g, "\n\n").replace(/[ \t]{2,}/g, " ").trim();
+}
+// Footer for a template that doesn't place {{unsubscribe_url}} itself.
+function footers(brand: string, url: string) {
+  const html = `<div style="font-size:11px;color:#7A6F60;margin-top:24px">${escHtml(brand)}${POSTAL_ADDRESS ? ` · ${escHtml(POSTAL_ADDRESS)}` : ""} · <a href="${escHtml(url)}" style="color:#7A6F60">Unsubscribe</a></div>`;
+  const text = `--\n${brand}${POSTAL_ADDRESS ? "\n" + POSTAL_ADDRESS : ""}\nUnsubscribe: ${url}`;
+  return { html, text };
+}
 
 // ── brand routing ──────────────────────────────────────────────────────────
 function isSspSeq(seq: any) {
@@ -228,6 +271,7 @@ Deno.serve(async (req) => {
 
     const report: any[] = [];
     let sentTotal = 0;
+    let room = !dry && DAILY_CAP > 0 ? Math.max(0, DAILY_CAP - await sentToday()) : Infinity;
 
     for (const seq of seqs) {
       const enrollments = seq.enrollments || [];
@@ -303,11 +347,23 @@ Deno.serve(async (req) => {
           title: contact.title || "",
           email: contact.email,
           sender_name: seq.from_name || "",
-          unsubscribe_url: `${SUPABASE_URL}/functions/v1/unsubscribe?c=${encodeURIComponent(contact.id)}`,
+          unsubscribe_url: `${UNSUB_PAGE}?c=${encodeURIComponent(contact.id)}`,
         };
+        // One-click unsubscribe (List-Unsubscribe-Post) must hit the function itself.
+        const oneClick = `${SUPABASE_URL}/functions/v1/unsubscribe?c=${encodeURIComponent(contact.id)}`;
 
         if (dry) { row(en, contact, "would_send", merge(tpl.subject || "", ctx) || "(no subject)", i); continue; }
         if (!RESEND_KEY || !fromHeader) { row(en, contact, "error", "RESEND_API_KEY / RESEND_FROM(_SSP) not configured", i); continue; }
+        if (room <= 0) { row(en, contact, "waiting", `Daily send cap (${DAILY_CAP}/day) reached; sends on a later run`, i); continue; }
+
+        const tplSrc = tpl.html || escHtml(String(tpl.body || "")).replace(/\n/g, "<br />");
+        let html = merge(tplSrc, ctx);
+        let text = tpl.body && String(tpl.body).trim() ? merge(String(tpl.body), ctx) : htmlToText(html);
+        if (!/\{\{\s*unsubscribe_?url\s*\}\}/i.test(tplSrc + (tpl.body || ""))) {
+          const f = footers(seq.from_name || (isSspSeq(seq) ? "Strategic Supply Partners" : "Chief Negotiators"), ctx.unsubscribe_url);
+          html = /<\/body>/i.test(html) ? html.replace(/<\/body>/i, `${f.html}</body>`) : html + f.html;
+          text = `${text}\n\n${f.text}`;
+        }
 
         try {
           const res = await fetch("https://api.resend.com/emails", {
@@ -318,9 +374,10 @@ Deno.serve(async (req) => {
               ...(seq.from_email ? { reply_to: seq.from_email } : {}),
               to: [contact.email],
               subject: merge(tpl.subject || "", ctx),
-              html: merge(tpl.html || String(tpl.body || "").replace(/\n/g, "<br />"), ctx),
+              html,
+              text,
               headers: {
-                "List-Unsubscribe": `<${ctx.unsubscribe_url}>`,
+                "List-Unsubscribe": `<${oneClick}>`,
                 "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
               },
               tags: [
@@ -337,6 +394,7 @@ Deno.serve(async (req) => {
           en.stepIndex = i + 1;
           changed = true;
           sentTotal++;
+          room--;
           row(en, contact, "sent", "Sent from " + fromHeader, i);
 
           // Recorded immediately so the reports show the send even before the
