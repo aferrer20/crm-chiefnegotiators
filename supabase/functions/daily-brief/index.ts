@@ -36,6 +36,7 @@ const TZ = "America/New_York";
 const LOOKBACK_DAYS = 30;
 const PROMISE_DAYS = 14;
 const MODEL = "claude-opus-5-5";
+const READ_VERSION = 2;          // bump when the prompt changes; open items are re-read once
 const AI_BATCH = 6;
 const AI_PARALLEL = 4;
 const AI_MAX_ITEMS = 60;         // per run; a backlog drains over the next runs
@@ -71,6 +72,16 @@ function isNoise(m: any) {
   if (AUTO_SUBJECT.test(String(m.subject || "").trim())) return true;
   const body = low(m.body_text).slice(-3000);
   return /\bunsubscribe\b|view (this email )?in (your )?browser|manage (your )?(email )?preferences/.test(body);
+}
+// "Thomas, Jared" -> "Jared Thomas"; a bare address becomes its local part, capitalised.
+function cleanName(name: string, email: string) {
+  let n = String(name || "").trim().replace(/^["']|["']$/g, "");
+  if (/^[^,@]+,\s*[^,@]+$/.test(n)) { const [last, first] = n.split(/,\s*/); n = `${first} ${last}`; }
+  if (!n || n.includes("@")) {
+    const local = low(email).split("@")[0].replace(/[._-]+/g, " ").trim();
+    n = local.replace(/\b\w/g, (ch) => ch.toUpperCase());
+  }
+  return n;
 }
 // Drop the quoted history under a reply so only what this person wrote is read.
 function ownText(body: string) {
@@ -165,10 +176,12 @@ const SYSTEM = [
   "For each item you get the kind, the people, and the latest messages of the thread (oldest first).",
   "kind=reply: someone wrote last. include=true only if a real person expects Amanda to answer, decide, send or do something. include=false for newsletters, marketing, notifications, receipts, FYIs, CCs where she isn't asked anything, and closers like 'thanks' or 'sounds good'. Team members count only when they ask her for something.",
   "kind=silent: Amanda wrote last and got no reply. include=true unless her last message clearly needed no answer (a thank-you, a closer, or the deal is plainly dead).",
-  "kind=promise: Amanda's message contains a commitment. include=true only if she committed to a concrete action (send, check, intro, call, confirm) and nothing later in the thread shows it done.",
+  "kind=promise: Amanda's message contains a commitment. include=true only if she committed to a concrete action (send, check, intro, call, confirm) and nothing later in the thread shows it done. The summary must start with what Amanda promised, e.g. 'You promised Jeff (Tycapital) the site info before POF.'",
   "summary: one plain sentence under 22 words naming who and what, e.g. 'Juan (1547 Realty) asked for pricing on 2MW in Miami.' For promise, state what she promised.",
   "why: under 16 words on why it matters or what to do next. Concrete, no hype.",
   "priority: 1 = money, a deadline, a senior decision-maker or an active deal waiting on her; 2 = normal business; 3 = low stakes.",
+  "person: the real person's name as 'First Last' (fix 'Last, First', drop titles; if a shared inbox like sales@ or info@ wrote, use the name signed in the message). company: the organisation's proper name as written in signatures or the email (e.g. 'TRPS Group', not 'Trpsgroup'); empty if unknown.",
+  "Dates: today's date is given. If the thing was already handled, or its deadline or event has clearly passed and nothing is left to do, include=false.",
   "Never invent facts that are not in the messages. Plain language, no em dashes.",
 ].join("\n");
 const SCHEMA = {
@@ -184,8 +197,10 @@ const SCHEMA = {
           summary: { type: "string" },
           why: { type: "string" },
           priority: { type: "integer", enum: [1, 2, 3] },
+          person: { type: "string" },
+          company: { type: "string" },
         },
-        required: ["id", "include", "summary", "why", "priority"],
+        required: ["id", "include", "summary", "why", "priority", "person", "company"],
         additionalProperties: false,
       },
     },
@@ -201,7 +216,8 @@ function transcript(msgs: any[], owner: string) {
   }).join("\n\n");
 }
 async function aiRead(client: Anthropic, batch: any[]) {
-  const user = batch.map((c) => [
+  const today = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "long", year: "numeric", month: "long", day: "numeric" }).format(new Date());
+  const user = `Today is ${today}.\n\n` + batch.map((c) => [
     `### id=${c.key}`,
     `kind=${c.kind}`,
     `counterpart=${c.counterpart_name || c.counterpart_email}${c.company ? " · " + c.company : ""}${c.is_team ? " (team)" : ""}`,
@@ -305,13 +321,14 @@ async function scan(owner: string) {
   }
 
   // What's already known (AI read once per anchor).
-  const existing = await sel(`brief_items?select=id,kind,conversation_id,anchor_message_id,status,summary,web_link&owner_email=eq.${encodeURIComponent(owner)}&created_at=gte.${encodeURIComponent(new Date(Date.now() - 60 * 864e5).toISOString())}`);
+  const existing = await sel(`brief_items?select=id,kind,conversation_id,anchor_message_id,status,summary,web_link,ai&owner_email=eq.${encodeURIComponent(owner)}&created_at=gte.${encodeURIComponent(new Date(Date.now() - 60 * 864e5).toISOString())}`);
   const known = new Map(existing.map((e: any) => [`${e.kind}|${e.conversation_id}|${e.anchor_message_id}`, e]));
   const fresh = cands.filter((c) => !known.has(c.key));
+  const reread = cands.filter((c) => { const k: any = known.get(c.key); return k && k.status === "open" && Number(k.ai?.v || 0) < READ_VERSION; });
 
   // AI read for new candidates, newest first.
   fresh.sort((a, b) => String(b.waiting_since).localeCompare(String(a.waiting_since)));
-  const toRead = fresh.slice(0, AI_MAX_ITEMS);
+  const toRead = [...fresh, ...reread].slice(0, AI_MAX_ITEMS);
   const verdict = new Map<string, any>();
   let aiErrors = 0;
   if (ANTHROPIC_KEY && toRead.length) {
@@ -323,23 +340,36 @@ async function scan(owner: string) {
     });
   }
 
-  const rows = toRead.map((c) => {
+  const rows = toRead.filter((c) => !known.has(c.key)).map((c) => {
     const v = verdict.get(c.key);
     const fallback = !ANTHROPIC_KEY;   // no AI: show everything, plainly worded
     if (!v && !fallback) return null;   // AI failed for this one: retry next run
     const include = v ? v.include : true;
     return {
       owner_email: owner, kind: c.kind, conversation_id: c.conversation_id, anchor_message_id: c.anchor_message_id,
-      subject: c.subject, counterpart_name: c.counterpart_name, counterpart_email: c.counterpart_email, company: c.company || null,
+      subject: c.subject, counterpart_name: (v && v.person) || cleanName(c.counterpart_name, c.counterpart_email), counterpart_email: c.counterpart_email, company: (v && v.company) || c.company || null,
       account_id: c.account_id, contact_id: c.contact_id || null, is_team: !!c.is_team,
       summary: v ? v.summary : (c.kind === "reply" ? `${c.counterpart_name} wrote about "${c.subject}".` : c.kind === "silent" ? `No reply from ${c.counterpart_name} on "${c.subject}".` : `You promised a follow-up on "${c.subject}".`),
       why: v ? v.why : "",
       priority: v ? v.priority : 2,
       waiting_since: c.waiting_since,
       status: include ? "open" : "skipped",
-      ai: v ? { model: MODEL, read_at: new Date().toISOString(), internet_id: c.internet_id } : { internet_id: c.internet_id },
+      ai: v ? { v: READ_VERSION, model: MODEL, read_at: new Date().toISOString(), internet_id: c.internet_id } : { internet_id: c.internet_id },
     };
   }).filter(Boolean);
+  // Open items read by an older prompt get the new reading in place.
+  for (const c of toRead.filter((c) => known.has(c.key))) {
+    const v = verdict.get(c.key);
+    if (!v) continue;
+    const k: any = known.get(c.key);
+    await write("PATCH", `brief_items?id=eq.${k.id}`, {
+      summary: v.summary, why: v.why, priority: v.priority,
+      counterpart_name: v.person || cleanName(c.counterpart_name, c.counterpart_email),
+      company: v.company || c.company || null,
+      status: v.include ? "open" : "skipped",
+      ai: { ...(k.ai || {}), v: READ_VERSION, model: MODEL, read_at: new Date().toISOString(), internet_id: c.internet_id },
+    });
+  }
   if (rows.length) await write("POST", "brief_items?on_conflict=owner_email,kind,conversation_id,anchor_message_id", rows, "resolution=ignore-duplicates,return=minimal");
 
   // Anything still open that is no longer a candidate has been handled.
@@ -352,7 +382,7 @@ async function scan(owner: string) {
   // Snoozes that have come due reopen.
   await write("PATCH", `brief_items?owner_email=eq.${encodeURIComponent(owner)}&status=eq.snoozed&snooze_until=lte.${encodeURIComponent(new Date().toISOString())}`, { status: "open", snooze_until: null });
 
-  return { messages: msgs.length, threads: threads.size, candidates: cands.length, read: toRead.length, backlog: fresh.length - toRead.length, aiErrors, resolved: stale.length };
+  return { messages: msgs.length, threads: threads.size, candidates: cands.length, read: toRead.length, reread: reread.length, backlog: fresh.length + reread.length - toRead.length, aiErrors, resolved: stale.length };
 }
 
 // ── the email ──────────────────────────────────────────────────────────────
