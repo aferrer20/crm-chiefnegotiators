@@ -347,10 +347,14 @@ Deno.serve(async (req) => {
           title: contact.title || "",
           email: contact.email,
           sender_name: seq.from_name || "",
-          unsubscribe_url: `${UNSUB_PAGE}?c=${encodeURIComponent(contact.id)}`,
+          unsubscribe_url: "",
         };
+        // c = this step's campaign id, k = contact, e = address: the unsubscribe
+        // function needs k or e to know who is leaving.
+        const unsubQs = new URLSearchParams({ c: `seq-${seq.id}-${i}`, k: String(contact.id), e: String(contact.email) }).toString();
+        ctx.unsubscribe_url = `${UNSUB_PAGE}?${unsubQs}`;
         // One-click unsubscribe (List-Unsubscribe-Post) must hit the function itself.
-        const oneClick = `${SUPABASE_URL}/functions/v1/unsubscribe?c=${encodeURIComponent(contact.id)}`;
+        const oneClick = `${SUPABASE_URL}/functions/v1/unsubscribe?${unsubQs}`;
 
         if (dry) { row(en, contact, "would_send", merge(tpl.subject || "", ctx) || "(no subject)", i); continue; }
         if (!RESEND_KEY || !fromHeader) { row(en, contact, "error", "RESEND_API_KEY / RESEND_FROM(_SSP) not configured", i); continue; }

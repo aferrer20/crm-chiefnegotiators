@@ -14,7 +14,7 @@
 // A live send is one-shot: once the campaign id exists it refuses, unless the
 // earlier attempt delivered nothing (status "error"), which may be retried.
 //
-// POST { template_id, mode: "test" | "live" }
+// POST { template_id, mode: "test" | "live" | "forward" }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -42,8 +42,12 @@ Deno.serve(async (req) => {
   if (!RESEND_API_KEY || !RESEND_FROM) return json({ error: "Resend is not configured" }, 500);
   let input: any;
   try { input = await req.json(); } catch { return json({ error: "body must be JSON" }, 400); }
-  const mode = input?.mode === "live" ? "live" : "test";
+  const mode = input?.mode === "live" ? "live" : input?.mode === "forward" ? "forward" : "test";
   const isTest = mode === "test";
+  // forward: one personalized copy per guest, all addressed to design.forward_to,
+  // so the sender can forward each by hand. No campaign row, BCC or list headers;
+  // the unsubscribe link still belongs to the guest it was written for.
+  const isFwd = mode === "forward";
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
   const { data: t, error } = await sb.from("email_templates")
@@ -61,7 +65,11 @@ Deno.serve(async (req) => {
   let recipients: any[];
   const skipped: string[] = [];
 
-  if (isTest) {
+  if (isFwd) {
+    if (!d.forward_to) return json({ error: "design.forward_to is not set" }, 400);
+    campaignId = `fwd-${Date.now()}`;
+    recipients = d.recipients;
+  } else if (isTest) {
     campaignId = `test-${Date.now()}`;
     subject = `[TEST] ${subject}`;
     recipients = [{ email: d.test_to, ctx: d.test_ctx || { first_name: "Amanda" } }];
@@ -107,13 +115,14 @@ Deno.serve(async (req) => {
   const payload = recipients.map((r) => {
     const unsub = unsubUrl(campaignId, r, isTest);
     const ctx = { ...(r.ctx || {}), unsubscribe_url: unsub };
+    const who = String((r.ctx && r.ctx.passengers) || r.email);
     return {
-      from, reply_to: replyTo, to: [r.email],
-      ...(!isTest && BCC ? { bcc: [BCC] } : {}),
-      subject: merge(subject, ctx),
+      from, reply_to: replyTo, to: [isFwd ? String(d.forward_to) : r.email],
+      ...(!isTest && !isFwd && BCC ? { bcc: [BCC] } : {}),
+      subject: isFwd ? `${merge(subject, ctx)} (${who})` : merge(subject, ctx),
       html: merge(String(t.html || ""), ctx),
       text: merge(String(t.body || ""), ctx),
-      ...(!isTest ? { headers: { "List-Unsubscribe": `<${unsub}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } } : {}),
+      ...(!isTest && !isFwd ? { headers: { "List-Unsubscribe": `<${unsub}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } } : {}),
       tags: [
         { name: "campaign_id", value: campaignId },
         ...(r.contactId ? [{ name: "contact_id", value: String(r.contactId) }] : []),
@@ -138,7 +147,7 @@ Deno.serve(async (req) => {
     (out?.data || []).forEach((row: any, j: number) => sent.push({ r: recipients[i + j], id: row?.id || null }));
   }
 
-  if (!isTest) {
+  if (!isTest && !isFwd) {
     const rows = sent.filter((p) => p.r.contactId).map((p) => ({
       campaign_id: campaignId, contact_id: p.r.contactId, email: p.r.email, resend_email_id: p.id,
     }));
