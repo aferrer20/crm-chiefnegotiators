@@ -1,0 +1,33 @@
+Hi {{first_name}},
+
+I have access to an allocation of 40 NVIDIA H100 SXM5 servers, 320 GPUs in total, configured as a complete 8-GPU platform with 2 TB of system memory and full NDR InfiniBand per node.
+
+Before any quote is issued, NVIDIA and the OEM require end-user discovery: who will run the systems, where they'll live and how they're funded. Getting that done now is what separates a quote that moves from one that stalls in compliance.
+
+Complete the short end-user form and, once you qualify, I'll send the full datasheet, pricing and allocation terms directly.
+
+Fill out the end-user form to qualify:
+https://cncrm.thechiefnegotiators.com/end-user.html?c=h100-oct26
+(About 10 minutes. Reviewed within one business day. Confidential.)
+
+THE SYSTEM (per server, 7U)
+- GPU compute: 8x H100 SXM5, 80 GB HBM3 each, NVLink 4.0 / NVSwitch
+- Host: 2x Xeon Platinum 8468 (96 cores), 2 TB DDR5-4800 ECC
+- Networking: 8x ConnectX-7 400 Gb/s NDR InfiniBand, 2x 100 GbE management
+- Storage: 4x 3.84 TB NVMe Gen4, 2x 480 GB boot (RAID 1)
+- Platform: air-cooled, 4x 3000 W Titanium, N+N redundant
+
+HOW ALLOCATION WORKS
+01 Complete the end-user form: the end user, funding, workloads, site and rollout schedule.
+02 I review it personally, usually within one business day.
+03 Qualified buyers receive the full datasheet, pricing and allocation terms.
+
+Prefer to talk it through first? Reply here or call me directly.
+
+Amanda Ferrer
+Founder & CEO, The Chief Negotiators
+amanda@thechiefnegotiators.com · +1 727-504-9949
+
+--
+Chief Negotiators LLC · St. Petersburg, Florida
+Unsubscribe: {{unsubscribe_url}}

@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>End-User Qualification · The Chief Negotiators</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="End-user discovery for the NVIDIA H100 SXM5 allocation. Required by the OEM and NVIDIA before a quote is issued.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#13254A;--navy2:#0E1C3A;--ink:#141B2A;--body:#3B4252;--mute:#6B6458;--line:#E3DCCD;--paper:#F8F5EE;--card:#FFFFFF;
+  --gold:#A88A4F;--gold-ink:#8A6E3E;--gold-lt:#D2B67E;--wash:#FBF6EA;--err:#A3392B;--ok:#2F6B4F;
+  --serif:'Cormorant Garamond',Georgia,serif;--mono:'IBM Plex Mono',Menlo,Consolas,monospace;--sans:Inter,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--body);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--gold-ink)}
+.wrap{max-width:880px;margin:0 auto;padding:0 16px}
+/* masthead + hero, after the datasheet */
+.top{background:linear-gradient(180deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;border-bottom:3px solid var(--gold)}
+.mast{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 0}
+.logos{display:flex;align-items:center;gap:18px}
+.logos img{display:block;height:auto}
+.logos .cn{width:180px}.logos .ssp{width:54px}
+.logos .bar{width:1px;height:40px;background:rgba(255,255,255,.25)}
+.kicker{font:500 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--gold-lt);text-align:right}
+.hero{padding:30px 0 34px;border-top:1px solid rgba(255,255,255,.1)}
+.chip{display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(210,182,126,.55);padding:7px 14px;font:500 12px var(--mono);letter-spacing:.14em;color:#fff}
+.chip i{width:7px;height:7px;border-radius:50%;background:var(--gold-lt);display:inline-block}
+h1{font:500 50px/1.05 var(--serif);margin:20px 0 0;color:#fff;letter-spacing:-.01em;text-wrap:balance}
+h1 em{color:var(--gold-lt);font-style:italic}
+.lede{max-width:640px;margin:16px 0 0;color:#C9D1DF;font-size:16.5px;text-wrap:pretty}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:28px;border-top:1px solid rgba(255,255,255,.18)}
+.stats div{padding:16px 16px 0 0}.stats div+div{padding-left:16px;border-left:1px solid rgba(255,255,255,.18)}
+.stats b{display:block;font:500 34px/1 var(--serif);color:#fff}.stats b small{font-size:17px;color:var(--gold-lt);margin-left:3px}
+.stats span{display:block;margin-top:8px;font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#AEB8C9}
+/* form */
+.intro{display:flex;gap:28px;justify-content:space-between;align-items:flex-start;padding:34px 0 8px}
+.intro p{margin:0;max-width:520px}
+.steps{display:flex;gap:8px;flex-wrap:wrap}
+.steps span{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);border:1px solid var(--line);padding:6px 10px;background:var(--card);white-space:nowrap}
+.steps span.on{border-color:var(--gold);color:var(--gold-ink);background:var(--wash)}
+form{margin:18px 0 0}
+.sec{background:var(--card);border:1px solid var(--line);border-top:2px solid var(--navy);margin-top:22px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:22px 28px 6px}
+.sec-h h2{margin:0;font:500 28px/1.15 var(--serif);color:var(--navy)}
+.sec-h h2 small{font:500 22px var(--serif);color:var(--gold);margin-right:10px}
+.sec-h .tag{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);white-space:nowrap}
+.sec-note{padding:0 28px;margin:4px 0 0;color:var(--mute);font-size:14.5px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 22px;padding:18px 28px 26px}
+.full{grid-column:1/-1}
+.q{padding:18px 28px;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:0}
+.qn{font:500 13px var(--mono);color:var(--gold-ink);margin-right:8px}
+.l{display:block;font:600 14.5px/1.4 var(--sans);color:var(--ink)}
+.hint{display:block;margin-top:3px;font-size:13.5px;line-height:1.5;color:var(--mute)}
+.req{color:var(--gold-ink);font:500 10px var(--mono);letter-spacing:.12em;margin-left:6px;vertical-align:2px}
+input[type=text],input[type=email],input[type=tel],textarea{width:100%;margin-top:8px;border:1px solid var(--line);background:#FDFCF9;color:var(--ink);font:15px/1.5 var(--sans);padding:11px 12px;border-radius:4px;outline:none;transition:border-color .15s,box-shadow .15s}
+textarea{min-height:92px;resize:vertical}
+input:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(168,138,79,.16);background:#fff}
+input::placeholder,textarea::placeholder{color:#A39B8C}
+.bad input,.bad textarea{border-color:var(--err)}
+.seg{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:4px;background:#FDFCF9;font:500 13.5px var(--sans);color:var(--body);cursor:pointer;transition:all .15s}
+.seg input:checked+span{border-color:var(--navy);background:var(--navy);color:#fff}
+.seg input:focus-visible+span{outline:2px solid var(--gold);outline-offset:2px}
+.doc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 20px;align-items:center;padding:16px 28px;border-top:1px solid var(--line)}
+.doc .seg{margin-top:0;justify-content:flex-end}
+.doc .seg span{min-height:34px;padding:0 11px;font-size:12.5px}
+.attest{display:flex;gap:12px;align-items:flex-start;padding:4px 28px 0}
+.attest input{margin-top:4px;width:18px;height:18px;accent-color:var(--navy);flex:none}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;margin:26px 0 0;padding:24px 28px;background:var(--navy);color:#C9D1DF}
+.actions p{margin:0;font-size:13.5px;max-width:440px}
+button.go{border:0;background:var(--gold);color:#fff;font:600 15px var(--sans);letter-spacing:.01em;padding:0 28px;min-height:52px;border-radius:4px;cursor:pointer;transition:background .15s}
+button.go:hover{background:#957843}
+button.go[disabled]{opacity:.65;cursor:wait}
+.msg{margin:14px 0 0;min-height:22px;color:var(--err);font-size:14.5px}
+.saved{font:500 11px var(--mono);letter-spacing:.08em;color:var(--mute);text-transform:uppercase}
+/* done */
+.done{display:none;background:var(--card);border:1px solid var(--line);border-top:2px solid var(--gold);margin:34px 0 0;padding:36px 32px}
+.done h2{margin:0;font:500 40px/1.1 var(--serif);color:var(--navy)}
+.done .next{margin-top:22px}
+.done .next div{display:flex;gap:18px;padding:14px 0;border-top:1px solid var(--line)}
+.done .next b{font:500 22px var(--serif);color:var(--gold);min-width:30px}
+.sent .done{display:block}.sent form,.sent .intro{display:none}
+footer{margin:40px 0 0;padding:22px 0 34px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+@media (max-width:720px){
+  .mast{flex-direction:column;align-items:flex-start}.kicker{text-align:left}
+  h1{font-size:38px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stats div:nth-child(3){padding-left:0;border-left:0}
+  .stats div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.18);margin-top:12px}
+  .intro{flex-direction:column;gap:14px}
+  .grid{grid-template-columns:1fr;padding:16px 18px 22px}
+  .sec-h,.q,.doc,.attest{padding-left:18px;padding-right:18px}.sec-note{padding:0 18px}
+  .sec-h{flex-direction:column;gap:4px}
+  .doc{grid-template-columns:1fr}.doc .seg{justify-content:flex-start}
+  .actions{padding:20px 18px}button.go{width:100%}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="mast">
+      <div class="logos">
+        <img class="cn" src="assets/email/offers/h100-2026/cn-white.png" alt="The Chief Negotiators" width="180" height="52">
+        <span class="bar" aria-hidden="true"></span>
+        <img class="ssp" src="assets/email/offers/h100-2026/ssp-white.png" alt="Strategic Supply Partners" width="54" height="44">
+      </div>
+      <div class="kicker">End-user discovery<br>Required before the quote</div>
+    </div>
+    <div class="hero">
+      <span class="chip"><i></i>NVIDIA H100 SXM5 · AIR-COOLED</span>
+      <h1>Qualify for the H100 allocation. <em>Built for AI at scale.</em></h1>
+      <p class="lede">40 eight-GPU servers, 320 GPUs in total. NVIDIA and the OEM require end-user discovery before any quote is issued. Complete it once here and, once you qualify, you receive the full datasheet, pricing and allocation terms.</p>
+      <div class="stats">
+        <div><b>40</b><span>Servers available</span></div>
+        <div><b>320</b><span>H100 SXM5 GPUs</span></div>
+        <div><b>640<small>GB</small></b><span>HBM3 per server</span></div>
+        <div><b>400<small>Gb/s</small></b><span>NDR InfiniBand ×8</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <div class="intro">
+    <p>About ten minutes. Answer for the <b>actual end user</b>, the entity that will run the workloads, not the integrator or reseller. Your answers save in this browser as you type.</p>
+    <div class="steps" aria-hidden="true"><span class="on">01 You</span><span>02 Discovery</span><span>03 Compliance</span><span>04 Sign</span></div>
+  </div>
+
+  <form id="f" novalidate>
+    <div class="hp" aria-hidden="true"><label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+
+    <section class="sec" data-step="0">
+      <div class="sec-h"><h2><small>01</small>Your details</h2><span class="tag">Who we're speaking with</span></div>
+      <div class="grid">
+        <label><span class="l">Full name<span class="req">REQUIRED</span></span><input type="text" name="name" autocomplete="name" required></label>
+        <label><span class="l">Title</span><input type="text" name="title" autocomplete="organization-title"></label>
+        <label><span class="l">Company<span class="req">REQUIRED</span></span><input type="text" name="company" autocomplete="organization" required></label>
+        <label><span class="l">Work email<span class="req">REQUIRED</span></span><input type="email" name="email" autocomplete="email" required></label>
+        <label><span class="l">Phone</span><input type="tel" name="phone" autocomplete="tel"></label>
+        <div><span class="l">Servers wanted</span>
+          <div class="seg" role="radiogroup" aria-label="Servers wanted">
+            <label><input type="radio" name="quantity" value="1 to 4 servers"><span>1–4</span></label>
+            <label><input type="radio" name="quantity" value="5 to 10 servers"><span>5–10</span></label>
+            <label><input type="radio" name="quantity" value="11 to 20 servers"><span>11–20</span></label>
+            <label><input type="radio" name="quantity" value="21 to 40 servers"><span>21–40</span></label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" data-step="1">
+      <div class="sec-h"><h2><small>02</small>Discovery questions</h2><span class="tag">Answered before the quote</span></div>
+      <div class="q"><label><span class="l"><span class="qn">01</span>Actual end user(s)<span class="req">REQUIRED</span></span><span class="hint">The named operating entity that will run the workloads. Legal entity name, address, and named contacts with title, email and phone.</span><textarea name="end_user" placeholder="Legal entity name, address, named contacts (title / email / phone)"></textarea></label></div>
+      <div class="q"><label><span class="l"><span class="qn">02</span>Funding sources and title<span class="req">REQUIRED</span></span><span class="hint">Who is paying, the source of those funds, and which entity will hold title to the equipment.</span><textarea name="funding" placeholder="Payor entity, funding source, title holder"></textarea></label></div>
+      <div class="q"><label><span class="l"><span class="qn">03</span>Workloads and software stack<span class="req">REQUIRED</span></span><span class="hint">Workloads to be run and the full stack: orchestration, frameworks, models, tenancy model.</span><textarea name="workloads" placeholder="Workloads, orchestration, frameworks, models, tenancy"></textarea></label></div>
+      <div class="q"><label><span class="l"><span class="qn">04</span>Networking topology</span><span class="hint">Fabric, switching, interconnect, bandwidth, segmentation and external connectivity. A summary is fine for now.</span><textarea name="network" placeholder="Fabric, switching, interconnect, bandwidth, segmentation"></textarea></label></div>
+      <div class="q"><label><span class="l"><span class="qn">05</span>Colocation / datacenter location<span class="req">REQUIRED</span></span><span class="hint">Where the equipment will be installed, with site operator contacts and the lease or hosting contract reference.</span><textarea name="site" placeholder="Site name, address, operator contacts, contract reference"></textarea></label></div>
+      <div class="q"><label><span class="l"><span class="qn">06</span>Deployment / rollout schedule<span class="req">REQUIRED</span></span><span class="hint">By phase: order, delivery, install, burn-in, production, with dates and quantities.</span><textarea name="schedule" placeholder="Phase, dates, quantities, milestone owner"></textarea></label></div>
+    </section>
+
+    <section class="sec" data-step="2">
+      <div class="sec-h"><h2><small>03</small>Compliance package</h2><span class="tag">For NVIDIA review</span></div>
+      <p class="sec-note">Tell us where each document stands. Don't attach anything here: once you qualify, you'll get a secure link to send them.</p>
+      <div style="margin-top:12px">
+        <div class="doc" data-doc="registrations"><div><span class="l">Corporate registrations</span><span class="hint">For the named end customer, in every jurisdiction of registration.</span></div></div>
+        <div class="doc" data-doc="ownership"><div><span class="l">Ownership and management structure</span><span class="hint">Including percentage ownership across related entities.</span></div></div>
+        <div class="doc" data-doc="board"><div><span class="l">Board of directors</span><span class="hint">List of directors, where applicable.</span></div></div>
+        <div class="doc" data-doc="leases"><div><span class="l">Signed leases / hosting contracts</span><span class="hint">For the site named in question 05.</span></div></div>
+        <div class="doc" data-doc="other"><div><span class="l">Other compliance documents</span><span class="hint">Anything prepared by internal or external counsel on the transaction.</span></div></div>
+      </div>
+      <div class="q"><label><span class="l">Notes</span><span class="hint">Jurisdictions, entity names or exceptions we should know about.</span><textarea name="notes" style="min-height:70px"></textarea></label></div>
+    </section>
+
+    <section class="sec" data-step="3">
+      <div class="sec-h"><h2><small>04</small>Attestation</h2><span class="tag">Signed by you</span></div>
+      <label class="attest"><input type="checkbox" name="agree"><span>I confirm the information above was obtained directly from the named end user and, to the best of my knowledge, is accurate and complete as of today.</span></label>
+      <div class="grid">
+        <label><span class="l">Type your full name to sign<span class="req">REQUIRED</span></span><input type="text" name="sign_name" autocomplete="name"></label>
+        <label><span class="l">Title</span><input type="text" name="sign_title"></label>
+      </div>
+    </section>
+
+    <div class="actions">
+      <p>Confidential. Used only for OEM and NVIDIA compliance review. Qualified buyers receive the datasheet, pricing and allocation terms directly from Amanda Ferrer.</p>
+      <button class="go" type="submit">Submit for qualification</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><p class="msg" id="msg" role="alert"></p><span class="saved" id="saved"></span></div>
+  </form>
+
+  <section class="done" aria-live="polite">
+    <div class="saved" style="color:var(--gold-ink)">Received</div>
+    <h2>Thank you. Your discovery is in.</h2>
+    <p style="margin:14px 0 0;max-width:600px">A confirmation is on its way to your inbox. Here's what happens next:</p>
+    <div class="next">
+      <div><b>01</b><span>Amanda reviews it personally, usually within one business day.</span></div>
+      <div><b>02</b><span>Once you qualify, you receive the full datasheet, pricing and allocation terms.</span></div>
+      <div><b>03</b><span>Discovery goes to the OEM and NVIDIA for compliance alignment, so your quote isn't held up later.</span></div>
+    </div>
+    <p style="margin:22px 0 0">Questions in the meantime: <a href="mailto:amanda@thechiefnegotiators.com">amanda@thechiefnegotiators.com</a> · <a href="tel:+17275049949">+1 727-504-9949</a></p>
+  </section>
+
+  <footer><span>Chief Negotiators LLC · St. Petersburg, Florida</span><span>We don't buy or sell anything. We provide access.</span></footer>
+</main>
+
+<script>
+(function () {
+  var FN = 'https://stpkhpxhqzgruorrupaw.supabase.co/functions/v1/end-user-intake';
+  var OFFER = 'h100-8gpu-2026-10';
+  var DRAFT = 'cn-enduser-' + OFFER;
+  var DOCS = ['registrations', 'ownership', 'board', 'leases', 'other'];
+  var STATUS = ['Ready', 'In progress', 'Not yet', 'Not applicable'];
+  var f = document.getElementById('f'), msg = document.getElementById('msg'), saved = document.getElementById('saved');
+  var qs = new URLSearchParams(location.search);
+
+  // Status pickers for each compliance document.
+  DOCS.forEach(function (k) {
+    var row = document.querySelector('[data-doc="' + k + '"]');
+    var seg = document.createElement('div'); seg.className = 'seg'; seg.setAttribute('role', 'radiogroup');
+    STATUS.forEach(function (s, i) {
+      var l = document.createElement('label');
+      l.innerHTML = '<input type="radio" name="doc_' + k + '" value="' + s + '"' + (i === 2 ? ' checked' : '') + '><span>' + s + '</span>';
+      seg.appendChild(l);
+    });
+    row.appendChild(seg);
+  });
+
+  // Restore a draft, then let the email link fill what it knows.
+  try { var d = JSON.parse(localStorage.getItem(DRAFT) || 'null'); if (d) fill(d); } catch (e) {}
+  if (qs.get('e') && !f.email.value) f.email.value = qs.get('e');
+
+  function fill(d) {
+    Object.keys(d).forEach(function (k) {
+      var el = f.elements[k]; if (!el) return;
+      if (el.length && el[0] && el[0].type === 'radio') { [].forEach.call(el, function (r) { r.checked = r.value === d[k]; }); }
+      else if (el.type === 'checkbox') el.checked = !!d[k];
+      else el.value = d[k];
+    });
+  }
+  function read() {
+    var o = {};
+    [].forEach.call(f.elements, function (el) {
+      if (!el.name || el.name === 'website') return;
+      if (el.type === 'radio') { if (el.checked) o[el.name] = el.value; }
+      else if (el.type === 'checkbox') o[el.name] = el.checked;
+      else o[el.name] = el.value;
+    });
+    return o;
+  }
+  var t;
+  f.addEventListener('input', function (e) {
+    var w = e.target.closest('.bad'); if (w) w.classList.remove('bad');
+    clearTimeout(t);
+    t = setTimeout(function () { try { localStorage.setItem(DRAFT, JSON.stringify(read())); saved.textContent = 'Draft saved'; } catch (e) {} }, 400);
+  });
+
+  // Highlight the step the reader is on.
+  var tabs = document.querySelectorAll('.steps span');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (en) { if (en.isIntersecting) { var i = +en.target.dataset.step; tabs.forEach(function (s, j) { s.classList.toggle('on', j <= i); }); } });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    document.querySelectorAll('.sec').forEach(function (s) { io.observe(s); });
+  }
+
+  var REQUIRED = ['name', 'company', 'email', 'end_user', 'funding', 'workloads', 'site', 'schedule', 'sign_name'];
+  f.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = read(), first = null;
+    REQUIRED.forEach(function (k) {
+      var el = f.elements[k], ok = String(v[k] || '').trim() && (k !== 'email' || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v[k].trim()));
+      var wrap = el.closest('label'); wrap.classList.toggle('bad', !ok);
+      if (!ok && !first) first = el;
+    });
+    if (first) { msg.textContent = 'A few required answers are missing. They are outlined in red.'; first.focus(); return; }
+    if (!v.agree) { msg.textContent = 'Please tick the attestation box to sign.'; f.agree.focus(); return; }
+
+    var body = {
+      offer: OFFER, campaign: qs.get('c') || '', website: f.website.value,
+      contact: { name: v.name, title: v.title, company: v.company, email: v.email, phone: v.phone },
+      quantity: v.quantity || '',
+      answers: { end_user: v.end_user, funding: v.funding, workloads: v.workloads, network: v.network, site: v.site, schedule: v.schedule },
+      compliance: { notes: v.notes },
+      attestation: { name: v.sign_name, title: v.sign_title, agree: !!v.agree }
+    };
+    DOCS.forEach(function (k) { body.compliance[k] = v['doc_' + k]; });
+
+    var btn = f.querySelector('.go'); btn.disabled = true; btn.textContent = 'Submitting…'; msg.textContent = '';
+    fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || 'error'); return j; }); })
+      .then(function () {
+        try { localStorage.removeItem(DRAFT); } catch (e) {}
+        document.getElementById('app').classList.add('sent');
+        window.scrollTo({ top: document.querySelector('.done').offsetTop - 20, behavior: 'smooth' });
+      })
+      .catch(function (err) {
+        btn.disabled = false; btn.textContent = 'Submit for qualification';
+        msg.textContent = err.message && err.message !== 'error' && err.message !== 'Failed to fetch' ? err.message
+          : 'That didn\'t go through. Please try again, or email amanda@thechiefnegotiators.com.';
+      });
+  });
+})();
+</script>
+</body>
+</html>
