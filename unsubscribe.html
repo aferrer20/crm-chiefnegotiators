@@ -32,7 +32,7 @@
   var t = document.getElementById('t'), m = document.getElementById('m'), b = document.getElementById('b');
   function done(title, msg, isErr) { t.textContent = title; m.textContent = msg; m.className = isErr ? 'err' : ''; b.style.display = 'none'; }
   if (p.get('t') === '1') { done('Test email', 'This was a test send, so the unsubscribe link is inactive. Nothing changed.'); return; }
-  if (!p.get('k') && !p.get('e')) { done('Link incomplete', 'This link is missing its identifier. Reply to the email and we will remove you by hand.', true); return; }
+  if (!p.get('k') && !p.get('e') && !p.get('c')) { done('Link incomplete', 'This link is missing its identifier. Reply to the email and we will remove you by hand.', true); return; }
   b.addEventListener('click', function () {
     b.disabled = true; b.textContent = 'Working…';
     fetch(FN + '?' + qs, { method: 'POST' }).then(function (r) {
