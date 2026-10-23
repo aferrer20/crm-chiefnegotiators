@@ -8,6 +8,19 @@ const RESEND_FROM = Deno.env.get("RESEND_FROM") || "onboarding@resend.dev";
 const RESEND_FROM_SSP = Deno.env.get("RESEND_FROM_SSP") || ""; // verified SSP-domain sender (strategicsupplypartners.com.au)
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+// Unsubscribe link shown in the email body. It lives on our own domain: a
+// visible link to a random *.supabase.co host reads as phishing to filters.
+// The page POSTs the opt-out back to the unsubscribe function.
+const UNSUB_PAGE = Deno.env.get("UNSUBSCRIBE_PAGE") || "https://cncrm.thechiefnegotiators.com/unsubscribe.html";
+// CAN-SPAM wants a postal address in every commercial email; filters look for it.
+const POSTAL_ADDRESS = (Deno.env.get("SENDER_POSTAL_ADDRESS") || "").trim();
+// Most real sends per UTC day across campaigns and sequences. A young domain
+// that sends hundreds in a burst gets throttled into junk. "0" turns it off.
+const DAILY_CAP = (() => {
+  const v = (Deno.env.get("DAILY_SEND_CAP") || "").trim();
+  const n = v === "" ? 150 : Number(v);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+})();
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -48,6 +61,22 @@ function isSspSend(campaign: any, r: any) {
 }
 function fromAddressFor(campaign: any, r: any) {
   return (isSspSend(campaign, r) && RESEND_FROM_SSP) ? RESEND_FROM_SSP : RESEND_FROM;
+}
+
+// Real sends since 00:00 UTC. The webhook's email.sent rows cover campaigns and
+// sequences; run-sequences also logs its own row the moment it sends, which
+// still counts when the webhook lags or isn't subscribed to email.sent.
+async function sentToday(supa: any): Promise<number> {
+  const since = new Date(); since.setUTCHours(0, 0, 0, 0);
+  const count = async (col: string, val: string) => {
+    try {
+      const { count } = await supa.from("campaign_events").select("type", { count: "exact", head: true })
+        .eq("type", "sent").gte("occurred_at", since.toISOString()).eq(col, val);
+      return count || 0;
+    } catch { return 0; }
+  };
+  const [hook, seq] = await Promise.all([count("raw->>type", "email.sent"), count("raw->>source", "run-sequences")]);
+  return Math.max(hook, seq);
 }
 
 function validEmail(e: unknown) {
@@ -96,17 +125,29 @@ function isTestCampaign(c: any) {
   return c?.test === true || /^test-\d+$/.test(String(c?.id || ""));
 }
 
-function unsubUrl(campaignId: string | number, r: any, test?: boolean) {
+function unsubQuery(campaignId: string | number, r: any, test?: boolean) {
   const p = new URLSearchParams();
   if (campaignId != null) p.set("c", String(campaignId));
   if (r?.contactId) p.set("k", String(r.contactId));
   if (r?.email) p.set("e", String(r.email));
   if (test) p.set("t", "1");
-  return `${SUPABASE_URL}/functions/v1/unsubscribe?${p.toString()}`;
+  return p.toString();
+}
+// List-Unsubscribe header target: Gmail/Outlook one-click POSTs straight here.
+function unsubUrl(campaignId: string | number, r: any, test?: boolean) {
+  return `${SUPABASE_URL}/functions/v1/unsubscribe?${unsubQuery(campaignId, r, test)}`;
+}
+// Link in the body: the confirm page on our own domain.
+function unsubPageUrl(campaignId: string | number, r: any, test?: boolean) {
+  return `${UNSUB_PAGE}?${unsubQuery(campaignId, r, test)}`;
 }
 
 function ctxFor(campaign: any, r: any): Record<string, string> {
-  return { ...(r?.ctx || {}), unsubscribe_url: unsubUrl(campaign.id, r, isTestCampaign(campaign)) };
+  return { ...(r?.ctx || {}), unsubscribe_url: unsubPageUrl(campaign.id, r, isTestCampaign(campaign)) };
+}
+
+function escHtml(s: string) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 let lastCall = 0;
@@ -131,7 +172,23 @@ async function resendFetch(url: string, body: any, attempt = 0): Promise<{ res: 
   return { res, json };
 }
 
+function footerText(c: any, ctx: Record<string, string>) {
+  const brand = c.brandName || c.fromName || "Chief Negotiators";
+  return `--\n${brand}${POSTAL_ADDRESS ? "\n" + POSTAL_ADDRESS : ""}\nUnsubscribe: ${ctx.unsubscribe_url || ""}`;
+}
+
+// A custom HTML template that forgot the unsubscribe token still gets a footer.
+function footerHtml(c: any, ctx: Record<string, string>) {
+  const brand = escHtml(c.brandName || c.fromName || "Chief Negotiators");
+  return `<div style="font-size:11px;color:#7A6F60;text-align:center;margin:24px 0 8px;font-family:-apple-system,system-ui,Helvetica,Arial,sans-serif">${brand}${POSTAL_ADDRESS ? ` · ${escHtml(POSTAL_ADDRESS)}` : ""} · <a href="${escHtml(ctx.unsubscribe_url || "")}" style="color:#7A6F60">Unsubscribe</a></div>`;
+}
+
 function plainText(c: any, ctx: Record<string, string>) {
+  const t = plainTextBody(c, ctx);
+  return ctx.unsubscribe_url && !t.includes(ctx.unsubscribe_url) ? `${t}\n\n${footerText(c, ctx)}` : t;
+}
+
+function plainTextBody(c: any, ctx: Record<string, string>) {
   const src = c.body && String(c.body).trim() ? c.body : (c.html || "");
   return merge(String(src), ctx)
     .replace(/<style[\s\S]*?<\/style>/gi, "")
@@ -149,7 +206,12 @@ function plainText(c: any, ctx: Record<string, string>) {
 }
 
 function renderHtml(c: any, ctx: Record<string, string>) {
-  if (c.html) return merge(c.html, ctx);
+  if (c.html) {
+    if (/\{\{\s*unsubscribe_?url\s*\}\}/i.test(c.html)) return merge(c.html, ctx);
+    const html = merge(c.html, ctx);
+    const foot = footerHtml(c, ctx);
+    return /<\/body>/i.test(html) ? html.replace(/<\/body>/i, `${foot}</body>`) : html + foot;
+  }
   const body = merge(c.body || "", ctx).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
   const subject = merge(c.subject || "", ctx);
   const preheader = merge(c.preheader || "", ctx);
@@ -171,7 +233,7 @@ function renderHtml(c: any, ctx: Record<string, string>) {
         ${cta}
         <hr style="border:none;border-top:1px solid #E5DBC6;margin:28px 0 14px">
         <div style="font-size:11px;color:#7A6F60;text-align:center">
-          ${c.brandName || c.fromName || "Chief Negotiators"} · <a href="{{unsubscribe_url}}" style="color:#7A6F60">Unsubscribe</a>
+          ${escHtml(c.brandName || c.fromName || "Chief Negotiators")}${POSTAL_ADDRESS ? ` · ${escHtml(POSTAL_ADDRESS)}` : ""} · <a href="${escHtml(ctx.unsubscribe_url || "")}" style="color:#7A6F60">Unsubscribe</a>
         </div>
       </td></tr>
     </table>
@@ -263,6 +325,19 @@ serve(async (req) => {
 
     if (recipients.length === 0) {
       return new Response(JSON.stringify({ error: "No sendable recipients left — every address was invalid, duplicate or unsubscribed.", skipped }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+    }
+
+    // Daily volume cap. Anything over today's allowance is held back and
+    // reported, not sent; send it again tomorrow.
+    if (!isTest && DAILY_CAP > 0) {
+      const room = Math.max(0, DAILY_CAP - await sentToday(supa));
+      if (recipients.length > room) {
+        recipients.slice(room).forEach((r: any) => skipped.push({ email: r.email, reason: `daily send cap (${DAILY_CAP}/day) reached; send again tomorrow` }));
+        recipients = recipients.slice(0, room);
+      }
+      if (recipients.length === 0) {
+        return new Response(JSON.stringify({ error: `Daily send cap of ${DAILY_CAP} reached. Nothing was sent; try again tomorrow.`, skipped }), { status: 429, headers: { ...CORS, "Content-Type": "application/json" } });
+      }
     }
 
     // Authoritative personalization: real name + real company from the CRM.
@@ -421,10 +496,11 @@ serve(async (req) => {
     }
 
     const isFinalChunk = campaign.final !== false;
+    const capped = skipped.some((x: any) => /daily send cap/.test(String(x.reason)));
     if (!isTest) {
       const total = Number(campaign.recipientTotal) || sentPairs.length;
       await supa.from("campaigns").update({
-        status: isFinalChunk ? (failures.length ? "sent_partial" : "sent") : "sending",
+        status: isFinalChunk ? ((failures.length || capped) ? "sent_partial" : "sent") : "sending",
         recipient_count: total,
         ...(failures.length ? { error_message: JSON.stringify(failures.slice(0, 5)) } : {}),
       }).eq("id", campaign.id);
