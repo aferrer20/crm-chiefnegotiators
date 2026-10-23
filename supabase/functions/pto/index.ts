@@ -231,26 +231,31 @@ Deno.serve(async (req) => {
   const b = await req.json().catch(() => ({}));
   const action = String(b.action || "");
 
+  // verify_jwt has already checked the signature, so the role claim can be trusted.
+  let role = "";
+  try { role = JSON.parse(atob(bearer.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).role || ""; } catch { /* not a JWT */ }
+  const isService = bearer === SERVICE_ROLE || role === "service_role";
+
   // Who is calling, and are they an approver?
   const { data: reps } = await sb.from("reps").select("id,name,email,company,is_admin,off_board");
   const approvers = (reps || []).filter((r: any) => r.is_admin && !r.off_board).map((r: any) => low(r.email));
   let me: any = null;
-  if (bearer && bearer !== SERVICE_ROLE) {
+  if (bearer && bearer !== SERVICE_ROLE && role !== "service_role") {
     const { data } = await sb.auth.getUser(bearer);
     const email = low(data?.user?.email);
     me = (reps || []).find((r: any) => low(r.email) === email && !r.off_board) || null;
   }
-  const isService = bearer === SERVICE_ROLE;
   const isApprover = !!me && approvers.includes(low(me.email));
-  if (!me && !(isService && action === "health")) return json({ error: "Sign in to the CRM first." }, 401);
+  // health answers yes/no to anyone holding a project key; the role list only to approvers.
+  if (!me && action !== "health") return json({ error: "Sign in to the CRM first." }, 401);
 
   try {
     if (action === "health") {
-      if (!isApprover && !isService) return json({ error: "Approvers only." }, 403);
+      const full = isApprover || isService;
       const out: Record<string, unknown> = {};
       for (const [k, mailbox] of [["cn", NOTIFY_TO], ["ssp", "monika@strategicsupplypartners.com.au"]]) {
         const t = await tokenFor(mailbox);
-        out[k] = { ok: !!t.token, canWriteCalendars: t.roles.includes("Calendars.ReadWrite"), roles: t.roles, error: t.error || null };
+        out[k] = { ok: !!t.token, canWriteCalendars: t.roles.includes("Calendars.ReadWrite"), ...(full ? { roles: t.roles, error: t.error || null } : {}) };
       }
       return json({ ok: true, tenants: out });
     }
