@@ -15,15 +15,22 @@
 // re-read until a newer message changes it. Items resolve themselves when the
 // thread moves on.
 //
-// Then, on weekdays, one email at 8am New York time: today's meetings and the
-// list, ranked. The same list backs the CRM's Today screen.
+// Then, on weekdays, one email at about 7:30 in each person's own time zone:
+// today's meetings and the list, ranked. The same list backs the CRM's Today
+// screen.
 //
-// POST {}                          cron: scans at 6am and 7am NY; at 7am also sends (once a day)
-// POST { mode: "scan" }            scan now, send nothing
-// POST { mode: "send", force }     scan + send now (force ignores the once-a-day guard)
-// POST { mode: "preview" }         scan + return the email HTML without sending
-// Optional { owner: "<email>" }    defaults to BRIEF_OWNER
+// Who gets a brief lives in brief_recipients: the CRM login (owner key), where
+// to send it, the time zone, and the synced mailboxes it reads (Camila's
+// brief reads both her CN and SSP mailboxes).
+//
+// POST { owner }                   cron (hourly, one call per recipient): scans at 6am
+//                                  local; at 7am local also sends (once a day)
+// POST { owner, mode: "scan" }     scan now, send nothing
+// POST { owner, mode: "send", force }   scan + send now (force ignores the once-a-day guard)
+// POST { owner, mode: "preview" }  scan + return the email HTML without sending
+// owner defaults to BRIEF_OWNER
 import Anthropic from "npm:@anthropic-ai/sdk@0.128.0";
+import { AsyncLocalStorage } from "node:async_hooks";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -98,14 +105,31 @@ function businessDaysBetween(from: Date, to: Date) {
   while (d < end) { d.setUTCDate(d.getUTCDate() + 1); const wd = d.getUTCDay(); if (wd !== 0 && wd !== 6) n++; }
   return n;
 }
-function nyParts(d = new Date()) {
-  const f = new Intl.DateTimeFormat("en-US", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hour12: false, weekday: "short" });
+// Per-request context: whose brief this is, every address that counts as
+// them, and their clock. Requests can run side by side in one isolate (the cron
+// fires one per recipient at once), so this lives in AsyncLocalStorage, never
+// in module globals.
+type Rcpt = { login: string; name: string; sendTo: string; tz: string; mailboxes: string[] };
+type Ctx = { R: Rcpt; MINE: Set<string>; tz: string };
+const als = new AsyncLocalStorage<Ctx>();
+const DEFAULT_CTX: Ctx = { R: { login: OWNER, name: "", sendTo: OWNER, tz: TZ, mailboxes: [OWNER] }, MINE: new Set([OWNER]), tz: TZ };
+const cur = () => als.getStore() || DEFAULT_CTX;
+function localParts(d = new Date()) {
+  const f = new Intl.DateTimeFormat("en-US", { timeZone: cur().tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hour12: false, weekday: "short" });
   const p: Record<string, string> = {};
   f.formatToParts(d).forEach((x) => (p[x.type] = x.value));
   return { date: `${p.year}-${p.month}-${p.day}`, hour: Number(p.hour) % 24, weekday: p.weekday };
 }
-const fmtDay = (d = new Date()) => new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "long", month: "long", day: "numeric" }).format(d);
-const fmtTime = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+const fmtDay = (d = new Date()) => new Intl.DateTimeFormat("en-US", { timeZone: cur().tz, weekday: "long", month: "long", day: "numeric" }).format(d);
+const fmtTime = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: cur().tz, hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+
+// Who the brief is for: login (owner key), name, where it goes, mailboxes read.
+async function recipient(login: string): Promise<Rcpt> {
+  const rows = await sel(`brief_recipients?select=*&login_email=eq.${encodeURIComponent(login)}`).catch(() => []);
+  const r = rows[0];
+  if (!r) return { login, name: login.startsWith("amanda@") ? "Amanda" : "", sendTo: login, tz: TZ, mailboxes: [login] };
+  return { login, name: r.name, sendTo: low(r.send_to), tz: r.tz || TZ, mailboxes: (r.mailboxes || []).map(low) };
+}
 function ago(iso: string) {
   const h = (Date.now() - new Date(iso).getTime()) / 36e5;
   if (h < 20) return "today";
@@ -113,51 +137,75 @@ function ago(iso: string) {
   return d <= 1 ? "1 day" : `${d} days`;
 }
 
-// ── Microsoft Graph (app credentials, as calendar-sync uses) ───────────────
-let graphToken: string | null | undefined;
-async function graph() {
-  if (graphToken !== undefined) return graphToken;
-  const tenant = Deno.env.get("AZURE_TENANT_ID"), cid = Deno.env.get("AZURE_CLIENT_ID"), sec = Deno.env.get("AZURE_CLIENT_SECRET");
-  if (!tenant || !cid || !sec) return (graphToken = null);
-  try {
-    const r = await fetch(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`, {
-      method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ client_id: cid, client_secret: sec, scope: "https://graph.microsoft.com/.default", grant_type: "client_credentials" }),
-    });
-    const j = await r.json();
-    graphToken = r.ok ? j.access_token : null;
-  } catch { graphToken = null; }
-  return graphToken;
+// ── Microsoft Graph (app credentials per tenant, as calendar-peek uses) ─────
+// CN and SSP are separate Microsoft tenants; each mailbox is read with its own.
+function tenantConf(mailbox: string) {
+  const d = low(mailbox).split("@")[1] || "";
+  const env = (k: string) => Deno.env.get(k) || "";
+  if (d === "strategicsupplypartners.com.au")
+    return { key: "ssp", tenant: env("AZURE_SSP_TENANT_ID"), cid: env("AZURE_SSP_CLIENT_ID") || env("AZURE_CLIENT_ID"), sec: env("AZURE_SSP_CLIENT_SECRET") || env("AZURE_CLIENT_SECRET") };
+  if (d === "thechiefnegotiators.com")
+    return { key: "cn", tenant: env("AZURE_TENANT_ID"), cid: env("AZURE_CLIENT_ID"), sec: env("AZURE_CLIENT_SECRET") };
+  return null;
 }
-async function webLinkFor(owner: string, internetMessageId: string) {
-  const t = await graph();
-  if (!t || !internetMessageId) return null;
+const graphTokens = new Map<string, Promise<string | null>>();
+function graph(mailbox: string) {
+  const c = tenantConf(mailbox);
+  if (!c || !c.tenant || !c.cid || !c.sec) return Promise.resolve(null);
+  if (!graphTokens.has(c.key)) graphTokens.set(c.key, (async () => {
+    try {
+      const r = await fetch(`https://login.microsoftonline.com/${c.tenant}/oauth2/v2.0/token`, {
+        method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ client_id: c.cid, client_secret: c.sec, scope: "https://graph.microsoft.com/.default", grant_type: "client_credentials" }),
+      });
+      const j = await r.json();
+      return r.ok ? j.access_token as string : null;
+    } catch { return null; }
+  })());
+  return graphTokens.get(c.key)!;
+}
+// The message may sit in any of the recipient's mailboxes; the first hit wins.
+async function webLinkFor(mailboxes: string[], internetMessageId: string) {
+  if (!internetMessageId) return null;
   const q = `$filter=internetMessageId eq '${internetMessageId.replace(/'/g, "''")}'&$select=webLink`;
-  try {
-    const r = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(owner)}/messages?${encodeURI(q).replace(/\+/g, "%2B")}`, { headers: { Authorization: `Bearer ${t}` } });
-    if (!r.ok) return null;
-    const j = await r.json();
-    return (j.value && j.value[0] && j.value[0].webLink) || null;
-  } catch { return null; }
+  for (const mb of mailboxes) {
+    const t = await graph(mb);
+    if (!t) continue;
+    try {
+      const r = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(mb)}/messages?${encodeURI(q).replace(/\+/g, "%2B")}`, { headers: { Authorization: `Bearer ${t}` } });
+      if (!r.ok) continue;
+      const j = await r.json();
+      if (j.value && j.value[0] && j.value[0].webLink) return j.value[0].webLink as string;
+    } catch { /* next mailbox */ }
+  }
+  return null;
 }
-async function meetingsToday(owner: string) {
-  const t = await graph();
+async function meetingsToday(mailboxes: string[]) {
+  const all = (await Promise.all(mailboxes.map((mb) => meetingsFor(mb, mailboxes)))).flat();
+  // The same meeting on two of one person's calendars shows once.
+  const seen = new Set<string>();
+  return all.filter((m) => { const k = `${m.subject}|${m.start}`; if (seen.has(k)) return false; seen.add(k); return true; })
+    .sort((a, b) => String(a.start).localeCompare(String(b.start)));
+}
+async function meetingsFor(mailbox: string, mine: string[]) {
+  const t = await graph(mailbox);
   if (!t) return [];
-  const { date } = nyParts();
-  // Midnight-to-midnight New York, expressed in UTC (offset from the formatter).
+  const { date } = localParts();
+  // Midnight-to-midnight in the recipient's zone, expressed in UTC (offset from the formatter).
   const probe = new Date(`${date}T12:00:00Z`);
-  const nyNoon = Number(new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "2-digit", hour12: false }).format(probe));
-  const offsetH = 12 - nyNoon;
+  const localNoon = Number(new Intl.DateTimeFormat("en-US", { timeZone: cur().tz, hour: "2-digit", hour12: false }).format(probe)) % 24;
+  let offsetH = 12 - localNoon;
+  if (offsetH > 14) offsetH -= 24; else if (offsetH < -12) offsetH += 24;
   const start = new Date(Date.parse(`${date}T00:00:00Z`) + offsetH * 36e5).toISOString();
   const end = new Date(Date.parse(start) + 24 * 36e5).toISOString();
   const q = new URLSearchParams({ startDateTime: start, endDateTime: end, $select: "subject,start,end,isAllDay,isCancelled,attendees,organizer,location,onlineMeeting", $orderby: "start/dateTime", $top: "30" });
   try {
-    const r = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(owner)}/calendarView?${q}`, { headers: { Authorization: `Bearer ${t}`, Prefer: 'outlook.timezone="UTC"' } });
+    const r = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(mailbox)}/calendarView?${q}`, { headers: { Authorization: `Bearer ${t}`, Prefer: 'outlook.timezone="UTC"' } });
     if (!r.ok) return [];
     const j = await r.json();
     return (j.value || []).filter((e: any) => !e.isCancelled && !e.isAllDay).map((e: any) => {
       const people = [...(e.attendees || []).map((a: any) => a.emailAddress), e.organizer?.emailAddress]
-        .filter((a: any) => a && low(a.address) !== owner)
+        .filter((a: any) => a && !mine.includes(low(a.address)))
         .map((a: any) => a.name || a.address);
       return {
         subject: e.subject || "Meeting",
@@ -173,14 +221,14 @@ async function meetingsToday(owner: string) {
 
 // ── AI read ────────────────────────────────────────────────────────────────
 const SYSTEM = [
-  "You triage a busy founder's inbox into a morning to-do list. The founder is Amanda Ferrer, who runs The Chief Negotiators (AI infrastructure brokerage: power, data center capacity, GPUs) and co-founded Strategic Supply Partners.",
+  "You triage a busy person's inbox into a morning to-do list. The reader is {P}, who works at The Chief Negotiators (AI infrastructure brokerage: power, data center capacity, GPUs) and/or its partner Strategic Supply Partners.",
   "For each item you get the kind, the people, and the latest messages of the thread (oldest first).",
-  "kind=reply: someone wrote last. include=true only if a real person expects Amanda to answer, decide, send or do something. include=false for newsletters, marketing, notifications, receipts, FYIs, CCs where she isn't asked anything, and closers like 'thanks' or 'sounds good'. Team members count only when they ask her for something.",
-  "kind=silent: Amanda wrote last and got no reply. include=true unless her last message clearly needed no answer (a thank-you, a closer, or the deal is plainly dead).",
-  "kind=promise: Amanda's message contains a commitment. include=true only if she committed to a concrete action (send, check, intro, call, confirm) and nothing later in the thread shows it done. The summary must start with what Amanda promised, e.g. 'You promised Jeff (Tycapital) the site info before POF.'",
-  "summary: one plain sentence under 22 words naming who and what, e.g. 'Juan (1547 Realty) asked for pricing on 2MW in Miami.' For promise, state what she promised.",
+  "kind=reply: someone wrote last. include=true only if a real person expects {P} to answer, decide, send or do something. include=false for newsletters, marketing, notifications, receipts, FYIs, CCs where they aren't asked anything, and closers like 'thanks' or 'sounds good'. Team members count only when they ask {P} for something.",
+  "kind=silent: {P} wrote last and got no reply. include=true unless their last message clearly needed no answer (a thank-you, a closer, or the deal is plainly dead).",
+  "kind=promise: {P}'s message contains a commitment. include=true only if they committed to a concrete action (send, check, intro, call, confirm) and nothing later in the thread shows it done. The summary must start with what {P} promised, e.g. 'You promised Jeff (Tycapital) the site info before POF.'",
+  "summary: one plain sentence under 22 words naming who and what, e.g. 'Juan (1547 Realty) asked for pricing on 2MW in Miami.' For promise, state what they promised.",
   "why: under 16 words on why it matters or what to do next. Concrete, no hype.",
-  "priority: 1 = money, a deadline, a senior decision-maker or an active deal waiting on her; 2 = normal business; 3 = low stakes.",
+  "priority: 1 = money, a deadline, a senior decision-maker or an active deal waiting on them; 2 = normal business; 3 = low stakes.",
   "person: the real person's name as 'First Last' (fix 'Last, First', drop titles; if a shared inbox like sales@ or info@ wrote, use the name signed in the message). company: the organisation's proper name as written in signatures or the email (e.g. 'TRPS Group', not 'Trpsgroup'); empty if unknown.",
   "Dates: today's date is given. If the thing was already handled, or its deadline or event has clearly passed and nothing is left to do, include=false.",
   "Never invent facts that are not in the messages. Plain language, no em dashes.",
@@ -211,24 +259,24 @@ const SCHEMA = {
 };
 function transcript(msgs: any[], owner: string) {
   return msgs.slice(-4).map((m) => {
-    const who = low(m.from_email) === owner ? "Amanda" : `${m.from_name || m.from_email}${isTeam(m.from_email) ? " (her team)" : ""}`;
+    const who = cur().MINE.has(low(m.from_email)) ? (cur().R.name || "Owner") : `${m.from_name || m.from_email}${isTeam(m.from_email) ? " (their team)" : ""}`;
     const when = new Date(m.sent_at).toUTCString().slice(0, 16);
     return `--- ${who} · ${when}\nSubject: ${m.subject || ""}\n${ownText(m.body_text).slice(0, 1200)}`;
   }).join("\n\n");
 }
 async function aiRead(client: Anthropic, batch: any[]) {
-  const today = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "long", year: "numeric", month: "long", day: "numeric" }).format(new Date());
+  const today = new Intl.DateTimeFormat("en-US", { timeZone: cur().tz, weekday: "long", year: "numeric", month: "long", day: "numeric" }).format(new Date());
   const user = `Today is ${today}.\n\n` + batch.map((c) => [
     `### id=${c.key}`,
     `kind=${c.kind}`,
     `counterpart=${c.counterpart_name || c.counterpart_email}${c.company ? " · " + c.company : ""}${c.is_team ? " (team)" : ""}`,
-    c.kind === "silent" ? `Amanda's last message went unanswered for ${c.waitDays} business days.` : "",
+    c.kind === "silent" ? `${cur().R.name || "Their"}'s last message went unanswered for ${c.waitDays} business days.` : "",
     c.thread,
   ].filter(Boolean).join("\n")).join("\n\n");
   const res: any = await client.messages.create({
     model: MODEL,
     max_tokens: 4000,
-    system: SYSTEM,
+    system: SYSTEM.replaceAll("{P}", cur().R.name || "the reader"),
     output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
     messages: [{ role: "user", content: user }],
   } as any);
@@ -244,14 +292,15 @@ async function pool<T>(items: T[], n: number, fn: (x: T) => Promise<void>) {
 // ── scan ───────────────────────────────────────────────────────────────────
 async function scan(owner: string) {
   const reps = await sel(`reps?select=id,email,name`);
-  const rep = reps.find((r: any) => low(r.email) === owner);
-  if (!rep) throw new Error(`no rep row for ${owner}`);
+  const repIds = reps.filter((r: any) => cur().R.mailboxes.includes(low(r.email))).map((r: any) => r.id);
+  if (!repIds.length) throw new Error(`no rep row for ${cur().R.mailboxes.join(", ")}`);
+  const repFilter = repIds.length === 1 ? `eq.${repIds[0]}` : `in.(${repIds.join(",")})`;
   const since = new Date(Date.now() - LOOKBACK_DAYS * 864e5).toISOString();
 
   // Pages of 1000 until the window is read.
   const raw: any[] = [];
   for (let from = 0; from < 10000; from += 1000) {
-    const page = await sel(`email_messages?select=message_id,conversation_id,account_id,direction,from_email,from_name,to_list,cc_list,subject,body_text,sent_at&rep_id=eq.${rep.id}&sent_at=gte.${encodeURIComponent(since)}&order=sent_at.asc`, `${from}-${from + 999}`);
+    const page = await sel(`email_messages?select=message_id,conversation_id,account_id,direction,from_email,from_name,to_list,cc_list,subject,body_text,sent_at&rep_id=${repFilter}&sent_at=gte.${encodeURIComponent(since)}&order=sent_at.asc`, `${from}-${from + 999}`);
     raw.push(...page);
     if (page.length < 1000) break;
   }
@@ -272,10 +321,11 @@ async function scan(owner: string) {
   for (const [cid, ms] of threads) {
     const last = ms[ms.length - 1];
     // reply owed
-    if (last.direction === "in" && low(last.from_email) !== owner && !isNoise(last)
-        && (addr(last.to_list).includes(owner) || addr(last.cc_list).includes(owner))) {
+    const toMe = (list: any) => addr(list).some((a: string) => cur().MINE.has(a));
+    if (last.direction === "in" && !cur().MINE.has(low(last.from_email)) && !isNoise(last)
+        && (toMe(last.to_list) || toMe(last.cc_list))) {
       const team = isTeam(last.from_email);
-      if (team && !addr(last.to_list).includes(owner)) { /* team CCs are FYI */ } else {
+      if (team && !toMe(last.to_list)) { /* team CCs are FYI */ } else {
         cands.push({
           kind: "reply", conversation_id: cid, anchor_message_id: last.message_id || last.sent_at,
           subject: last.subject, counterpart_name: last.from_name || last.from_email, counterpart_email: low(last.from_email),
@@ -300,7 +350,7 @@ async function scan(owner: string) {
   }
 
   // gone quiet: follow_ups already tracks these per rep
-  const fus = await sel(`follow_ups?select=conversation_id,last_message_id,last_subject,last_sent_at,to_email,to_name,account_id,contact_id&rep_id=eq.${rep.id}&status=eq.pending&order=last_sent_at.desc&limit=200`);
+  const fus = await sel(`follow_ups?select=conversation_id,last_message_id,last_subject,last_sent_at,to_email,to_name,account_id,contact_id&rep_id=${repFilter}&status=eq.pending&order=last_sent_at.desc&limit=200`);
   for (const f of fus) {
     if (!f.conversation_id || cands.some((c) => c.kind === "reply" && c.conversation_id === f.conversation_id)) continue;
     const waitDays = businessDaysBetween(new Date(f.last_sent_at), now);
@@ -447,7 +497,7 @@ function renderBrief(p: any) {
   ${section("Promises you made", "You said you would. Nothing in the thread shows it done yet.", p.promise, p.counts.promiseRest)}
   <tr><td style="padding:34px 40px 36px">
     <a href="${esc(CRM_URL)}#today" style="display:inline-block;background:${C.ink};color:#fff;text-decoration:none;font:600 13px ${SANS};padding:12px 20px;border-radius:8px">Open Today in the CRM</a>
-    <div style="font:12px/1.6 ${SANS};color:${C.muted};margin-top:18px">Built from your amanda@ inbox overnight. Mark items done or snooze them on the Today screen and they leave tomorrow's brief.</div>
+    <div style="font:12px/1.6 ${SANS};color:${C.muted};margin-top:18px">Built from your inbox overnight. Mark items done or snooze them on the Today screen and they leave tomorrow's brief.</div>
   </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -470,17 +520,16 @@ async function compose(owner: string) {
   // Outlook links for what's shown (stored, so each is looked up once).
   for (const it of shown) {
     if (it.web_link || !it.ai?.internet_id) continue;
-    const link = await webLinkFor(owner, it.ai.internet_id);
+    const link = await webLinkFor(cur().R.mailboxes, it.ai.internet_id);
     if (link) { it.web_link = link; await write("PATCH", `brief_items?id=eq.${it.id}`, { web_link: link }).catch(() => {}); }
   }
-  const rep = (await sel(`reps?select=name&email=ilike.${encodeURIComponent(owner)}`))[0] || {};
-  const meetings = await meetingsToday(owner);
+  const meetings = await meetingsToday(cur().R.mailboxes);
   const counts = {
     reply: by("reply").length, silent: by("silent").length, promise: by("promise").length,
     replyRest: rest("reply").length, silentRest: rest("silent").length, promiseRest: rest("promise").length,
   };
   const p = {
-    ownerName: owner.startsWith("amanda@") ? "Amanda" : rep.name || "",
+    ownerName: cur().R.name,
     counts, meetings, first,
     reply: rest("reply").slice(0, SECTION_MAX), silent: rest("silent").slice(0, SECTION_MAX), promise: rest("promise").slice(0, SECTION_MAX),
     preheader: `${counts.reply} replies owed · ${counts.silent} gone quiet · ${counts.promise} promises${meetings.length ? ` · ${meetings.length} meeting${meetings.length === 1 ? "" : "s"}` : ""}`,
@@ -490,13 +539,13 @@ async function compose(owner: string) {
 
 async function send(owner: string, p: any, briefDate: string) {
   if (!RESEND_API_KEY || !RESEND_FROM) throw new Error("Resend is not configured");
-  const day = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "long" }).format(new Date());
+  const day = new Intl.DateTimeFormat("en-US", { timeZone: cur().tz, weekday: "long" }).format(new Date());
   const subject = `Your ${day}: ${p.counts.reply} replies owed · ${p.counts.silent} gone quiet · ${p.counts.promise} promises`;
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: `"CN Daily Brief" <${RESEND_FROM}>`, to: [owner], subject,
+      from: `"CN Daily Brief" <${RESEND_FROM}>`, to: [cur().R.sendTo], subject,
       html: renderBrief(p), text: renderText(p),
       tags: [{ name: "campaign_id", value: `brief-${briefDate}` }],
     }),
@@ -511,11 +560,16 @@ Deno.serve(async (req) => {
   let body: any = {}; try { body = await req.json(); } catch { /* cron sends {} */ }
   const owner = low(body.owner || OWNER);
   const mode = String(body.mode || "cron");
-  const ny = nyParts();
+  const R = await recipient(owner).catch(() => DEFAULT_CTX.R);
+  return als.run({ R, MINE: new Set([...R.mailboxes, owner]), tz: R.tz }, () => handle(body, owner, mode));
+});
+
+async function handle(body: any, owner: string, mode: string) {
   try {
+    const ny = localParts();
     if (mode === "cron") {
       const weekday = !["Sat", "Sun"].includes(ny.weekday);
-      if (!weekday || (ny.hour !== 6 && ny.hour !== 7)) return json({ ok: true, skipped: `not a brief hour (${ny.weekday} ${ny.hour}:00 NY)` });
+      if (!weekday || (ny.hour !== 6 && ny.hour !== 7)) return json({ ok: true, skipped: `not a brief hour (${ny.weekday} ${ny.hour}:00 ${cur().tz})` });
       const scanned = await scan(owner);
       if (ny.hour === 6) return json({ ok: true, mode: "prescan", scanned });
       const already = await sel(`daily_briefs?select=id,sent_at&owner_email=eq.${encodeURIComponent(owner)}&brief_date=eq.${ny.date}`);
@@ -540,4 +594,4 @@ Deno.serve(async (req) => {
   } catch (e) {
     return json({ ok: false, error: (e as Error).message }, 500);
   }
-});
+}
