@@ -164,7 +164,8 @@ async function meetingsToday(owner: string) {
         start: e.start?.dateTime ? e.start.dateTime + "Z" : null,
         end: e.end?.dateTime ? e.end.dateTime + "Z" : null,
         with: [...new Set(people)].slice(0, 4),
-        where: e.onlineMeeting?.joinUrl ? "Online" : (e.location?.displayName || ""),
+        // A pasted join link (often with its passcode) reads as "Online", never the raw URL.
+        where: e.onlineMeeting?.joinUrl || /https?:\/\//i.test(e.location?.displayName || "") ? "Online" : (e.location?.displayName || ""),
       };
     });
   } catch { return []; }
