@@ -109,16 +109,16 @@ function businessDaysBetween(from: Date, to: Date) {
 // them, and their clock. Requests can run side by side in one isolate (the cron
 // fires one per recipient at once), so this lives in AsyncLocalStorage, never
 // in module globals.
-type Rcpt = { login: string; name: string; sendTo: string; tz: string; mailboxes: string[] };
+type Rcpt = { login: string; name: string; sendTo: string; tz: string; mailboxes: string[]; sendAt: number };
 type Ctx = { R: Rcpt; MINE: Set<string>; tz: string };
 const als = new AsyncLocalStorage<Ctx>();
-const DEFAULT_CTX: Ctx = { R: { login: OWNER, name: "", sendTo: OWNER, tz: TZ, mailboxes: [OWNER] }, MINE: new Set([OWNER]), tz: TZ };
+const DEFAULT_CTX: Ctx = { R: { login: OWNER, name: "", sendTo: OWNER, tz: TZ, mailboxes: [OWNER], sendAt: 7 * 60 + 30 }, MINE: new Set([OWNER]), tz: TZ };
 const cur = () => als.getStore() || DEFAULT_CTX;
 function localParts(d = new Date()) {
-  const f = new Intl.DateTimeFormat("en-US", { timeZone: cur().tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hour12: false, weekday: "short" });
+  const f = new Intl.DateTimeFormat("en-US", { timeZone: cur().tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false, weekday: "short" });
   const p: Record<string, string> = {};
   f.formatToParts(d).forEach((x) => (p[x.type] = x.value));
-  return { date: `${p.year}-${p.month}-${p.day}`, hour: Number(p.hour) % 24, weekday: p.weekday };
+  return { date: `${p.year}-${p.month}-${p.day}`, hour: Number(p.hour) % 24, minute: Number(p.minute), weekday: p.weekday };
 }
 const fmtDay = (d = new Date()) => new Intl.DateTimeFormat("en-US", { timeZone: cur().tz, weekday: "long", month: "long", day: "numeric" }).format(d);
 const fmtTime = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: cur().tz, hour: "numeric", minute: "2-digit" }).format(new Date(iso));
@@ -127,8 +127,9 @@ const fmtTime = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: cu
 async function recipient(login: string): Promise<Rcpt> {
   const rows = await sel(`brief_recipients?select=*&login_email=eq.${encodeURIComponent(login)}`).catch(() => []);
   const r = rows[0];
-  if (!r) return { login, name: login.startsWith("amanda@") ? "Amanda" : "", sendTo: login, tz: TZ, mailboxes: [login] };
-  return { login, name: r.name, sendTo: low(r.send_to), tz: r.tz || TZ, mailboxes: (r.mailboxes || []).map(low) };
+  if (!r) return { ...DEFAULT_CTX.R, login, name: login.startsWith("amanda@") ? "Amanda" : "", sendTo: login, mailboxes: [login] };
+  const [h, m] = String(r.send_at || "07:30").split(":").map(Number);
+  return { login, name: r.name, sendTo: low(r.send_to), tz: r.tz || TZ, mailboxes: (r.mailboxes || []).map(low), sendAt: h * 60 + (m || 0) };
 }
 function ago(iso: string) {
   const h = (Date.now() - new Date(iso).getTime()) / 36e5;
@@ -568,10 +569,15 @@ async function handle(body: any, owner: string, mode: string) {
   try {
     const ny = localParts();
     if (mode === "cron") {
+      // The cron fires every 30 minutes; each person has their own send slot
+      // (brief_recipients.send_at, local time) and is pre-scanned an hour before.
       const weekday = !["Sat", "Sun"].includes(ny.weekday);
-      if (!weekday || (ny.hour !== 6 && ny.hour !== 7)) return json({ ok: true, skipped: `not a brief hour (${ny.weekday} ${ny.hour}:00 ${cur().tz})` });
+      const slot = Math.floor((ny.hour * 60 + ny.minute) / 30) * 30;
+      const sendAt = cur().R.sendAt;
+      const hhmm = (n: number) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+      if (!weekday || (slot !== sendAt && slot !== sendAt - 60)) return json({ ok: true, skipped: `not ${cur().R.name || owner}'s slot (${ny.weekday} ${hhmm(slot)} ${cur().tz}; sends ${hhmm(sendAt)})` });
       const scanned = await scan(owner);
-      if (ny.hour === 6) return json({ ok: true, mode: "prescan", scanned });
+      if (slot !== sendAt) return json({ ok: true, mode: "prescan", scanned });
       const already = await sel(`daily_briefs?select=id,sent_at&owner_email=eq.${encodeURIComponent(owner)}&brief_date=eq.${ny.date}`);
       if (already[0]?.sent_at) return json({ ok: true, skipped: "already sent today", scanned });
       const p = await compose(owner);

@@ -35,3 +35,11 @@ $$;
 -- person's zone (and pre-scans at 6am), so every brief lands around 7:30 local.
 select cron.unschedule('cn-daily-brief') where exists (select 1 from cron.job where jobname = 'cn-daily-brief');
 -- (re-created with the project's function bearer; see cron.job 'cn-daily-brief')
+
+-- Staggered sends, 30 minutes apart, each in the person's own zone:
+-- Amanda 6:30 · Dan 7:00 · Vanessa 7:30 · Camila 8:00 (New York) · Monika 7:30 (Sydney).
+alter table public.brief_recipients add column if not exists send_at time not null default '07:30';
+update public.brief_recipients set send_at = '06:30' where login_email = 'amanda@thechiefnegotiators.com';
+update public.brief_recipients set send_at = '07:00' where login_email = 'dan@thechiefnegotiators.com';
+update public.brief_recipients set send_at = '08:00' where login_email = 'camila@thevaultmarketingco.com';
+update public.brief_recipients set tz = 'Australia/Sydney' where login_email = 'monika@strategicsupplypartners.com.au';
