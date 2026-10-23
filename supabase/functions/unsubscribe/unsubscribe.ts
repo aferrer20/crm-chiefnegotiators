@@ -8,8 +8,8 @@
 //   GET  -> redirect to the confirm page on our own site (cncrm.../unsubscribe.html),
 //           which POSTs back here when the person clicks Confirm. If that page
 //           isn't published yet, GET answers in plain, readable text instead.
-//   POST -> records the opt-out. Gmail and Outlook fire List-Unsubscribe=One-Click
-//           as a POST with no body, and the confirm page posts the same way.
+//   POST -> records the opt-out. Gmail and Outlook send RFC 8058 one-click as a
+//           POST with body "List-Unsubscribe=One-Click"; the confirm page posts from our site.
 //
 // A GET is never consent: mail-security scanners and link prefetchers fetch
 // every link in an email before anyone reads it.
@@ -18,6 +18,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CONFIRM_PAGE = "https://cncrm.thechiefnegotiators.com/unsubscribe.html";
+const CONFIRM_ORIGIN = new URL(CONFIRM_PAGE).origin;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "GET,POST,OPTIONS" };
 
@@ -45,9 +47,21 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const campaignId = url.searchParams.get("c") || null;
-    const contactId = url.searchParams.get("k") || null;
-    const email = (url.searchParams.get("e") || "").trim().toLowerCase() || null;
+    let campaignId = url.searchParams.get("c") || null;
+    let contactId = url.searchParams.get("k") || null;
+    let email = (url.searchParams.get("e") || "").trim().toLowerCase() || null;
+
+    // Sequence emails sent before Oct 23 carry only ?c=<contact id>. Resolve that
+    // to the contact so those links (and their one-click headers) still work.
+    if (!contactId && !email && campaignId && UUID.test(campaignId)) {
+      const supa = createClient(SUPABASE_URL, SERVICE_KEY);
+      const { data: c } = await supa.from("contacts").select("id,email").eq("id", campaignId).maybeSingle();
+      if (c) {
+        contactId = c.id; email = String(c.email || "").trim().toLowerCase() || null; campaignId = null;
+        url.searchParams.delete("c"); url.searchParams.set("k", contactId!);
+        if (email) url.searchParams.set("e", email);
+      }
+    }
     // Test sends carry a live-looking footer link; honouring it would opt the
     // author's own address out, so a test link changes nothing.
     const isTest = url.searchParams.get("t") === "1";
@@ -66,6 +80,17 @@ Deno.serve(async (req) => {
     if (isTest) return text(200, "Test email: nothing changed", "This was a test send. No address has been removed from any list.");
     if (!contactId && !email) {
       return text(400, "Link incomplete", "This unsubscribe link is missing its identifier. Reply to the email and we will remove you by hand.");
+    }
+
+    // Only two kinds of POST are consent: a mail client's RFC 8058 one-click
+    // (body "List-Unsubscribe=One-Click") and the Confirm button on our own page
+    // (browser fetch from CONFIRM_ORIGIN). Mail-security scanners that POST to
+    // every URL they find send neither, and must not opt real people out.
+    const body = await req.text().catch(() => "");
+    const oneClick = /List-Unsubscribe=One-Click/i.test(body);
+    const fromPage = (req.headers.get("origin") || "") === CONFIRM_ORIGIN;
+    if (!oneClick && !fromPage) {
+      return text(200, "Unsubscribe", "Nothing has changed yet. Open the unsubscribe link from the email and press Confirm, or use your mail app's Unsubscribe button.");
     }
 
     const supa = createClient(SUPABASE_URL, SERVICE_KEY);
