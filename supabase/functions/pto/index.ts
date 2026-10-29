@@ -14,8 +14,7 @@
 //   decide   { id, decision: "approve" | "decline", reason }   approver only
 //   health   {}                   approver/service: which tenants can write calendars
 //
-// Approvers are the active admins in reps (Amanda). An approver's own request
-// is approved on submit.
+// The approver is Amanda (NOTIFY_TO). Her own requests are approved on submit.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -237,13 +236,16 @@ Deno.serve(async (req) => {
   const isService = bearer === SERVICE_ROLE || role === "service_role";
 
   // Who is calling, and are they an approver?
-  const { data: reps } = await sb.from("reps").select("id,name,email,company,is_admin,off_board");
-  const approvers = (reps || []).filter((r: any) => r.is_admin && !r.off_board).map((r: any) => low(r.email));
+  const { data: reps } = await sb.from("reps").select("id,name,email,company,is_admin,off_board,auth_user_id");
+  // Approvals belong to Amanda alone, whoever else holds admin rights.
+  const approvers = [NOTIFY_TO];
   let me: any = null;
   if (bearer && bearer !== SERVICE_ROLE && role !== "service_role") {
     const { data } = await sb.auth.getUser(bearer);
+    // The login decides who you are (a rep's mailbox address can differ from it).
     const email = low(data?.user?.email);
-    me = (reps || []).find((r: any) => low(r.email) === email && !r.off_board) || null;
+    const live = (reps || []).filter((r: any) => !r.off_board);
+    me = live.find((r: any) => data?.user?.id && r.auth_user_id === data.user.id) || live.find((r: any) => low(r.email) === email) || null;
   }
   const isApprover = !!me && approvers.includes(low(me.email));
   // health answers yes/no to anyone holding a project key; the role list only to approvers.

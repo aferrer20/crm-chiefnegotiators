@@ -180,7 +180,8 @@ function footerText(c: any, ctx: Record<string, string>) {
 // A custom HTML template that forgot the unsubscribe token still gets a footer.
 function footerHtml(c: any, ctx: Record<string, string>) {
   const brand = escHtml(c.brandName || c.fromName || "Chief Negotiators");
-  return `<div style="font-size:11px;color:#7A6F60;text-align:center;margin:24px 0 8px;font-family:-apple-system,system-ui,Helvetica,Arial,sans-serif">${brand}${POSTAL_ADDRESS ? ` · ${escHtml(POSTAL_ADDRESS)}` : ""} · <a href="${escHtml(ctx.unsubscribe_url || "")}" style="color:#7A6F60">Unsubscribe</a></div>`;
+  const unsub = ctx.unsubscribe_url ? ` · <a href="${escHtml(ctx.unsubscribe_url)}" style="color:#7A6F60">Unsubscribe</a>` : "";
+  return `<div style="font-size:11px;color:#7A6F60;text-align:center;margin:24px 0 8px;font-family:-apple-system,system-ui,Helvetica,Arial,sans-serif">${brand}${POSTAL_ADDRESS ? ` · ${escHtml(POSTAL_ADDRESS)}` : ""}${unsub}</div>`;
 }
 
 function plainText(c: any, ctx: Record<string, string>) {
@@ -233,7 +234,7 @@ function renderHtml(c: any, ctx: Record<string, string>) {
         ${cta}
         <hr style="border:none;border-top:1px solid #E5DBC6;margin:28px 0 14px">
         <div style="font-size:11px;color:#7A6F60;text-align:center">
-          ${escHtml(c.brandName || c.fromName || "Chief Negotiators")}${POSTAL_ADDRESS ? ` · ${escHtml(POSTAL_ADDRESS)}` : ""} · <a href="${escHtml(ctx.unsubscribe_url || "")}" style="color:#7A6F60">Unsubscribe</a>
+          ${escHtml(c.brandName || c.fromName || "Chief Negotiators")}${POSTAL_ADDRESS ? ` · ${escHtml(POSTAL_ADDRESS)}` : ""}${ctx.unsubscribe_url ? ` · <a href="${escHtml(ctx.unsubscribe_url)}" style="color:#7A6F60">Unsubscribe</a>` : ""}
         </div>
       </td></tr>
     </table>
@@ -414,7 +415,41 @@ serve(async (req) => {
     const failures: any[] = [];
     let batchCount = 0;
 
-    if (attachments.length > 0) {
+    // One shared email: documents going to a deal team, where everyone should
+    // see who else has them and replies stay in one thread. Everyone is in To,
+    // so reply-all reaches the whole group. It reads as a business email, so it has
+    // no per-person unsubscribe link: one reader clicking it must not opt out
+    // the others. Still one message from the verified domain, so DKIM, SPF and
+    // DMARC alignment are exactly as for any other send.
+    const together = !!campaign.together && recipients.length > 1;
+    if (together && recipients.length > 20) {
+      return new Response(JSON.stringify({ error: "One shared email can go to at most 20 people. Send separately, or split the list.", skipped }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+    }
+    if (together) {
+      const lead = recipients[0] as any;
+      const companies = new Set((recipients as any[]).map((r) => r.ctx?.company).filter(Boolean));
+      const shared: Record<string, string> = {
+        ...(lead.ctx || {}), first_name: "", last_name: "", full_name: "", title: "", email: "",
+        company: companies.size === 1 ? String([...companies][0]) : "", unsubscribe_url: "",
+      };
+      try {
+        const { res, json } = await resendFetch("https://api.resend.com/emails", {
+          from: senderFor(lead),
+          ...(replyForRecipient(lead) ? { reply_to: replyForRecipient(lead) } : {}),
+          ...(bccList ? { bcc: bccList } : {}),
+          to: (recipients as any[]).map((r) => r.email),
+          subject: merge(campaign.subject, shared),
+          html: renderHtml(campaign, shared),
+          text: plainText(campaign, shared),
+          ...(attachments.length ? { attachments } : {}),
+          tags: [{ name: "campaign_id", value: String(campaign.id) }, { name: "mode", value: "together" }],
+        });
+        if (!res.ok) (recipients as any[]).forEach((r) => failures.push({ email: r.email, error: json }));
+        else (recipients as any[]).forEach((r) => sentPairs.push({ r, id: json?.id || null }));
+      } catch (e) {
+        (recipients as any[]).forEach((r) => failures.push({ email: r.email, error: String(e?.message || e) }));
+      }
+    } else if (attachments.length > 0) {
       for (const r of recipients) {
         try {
           const { res, json } = await resendFetch("https://api.resend.com/emails", {
