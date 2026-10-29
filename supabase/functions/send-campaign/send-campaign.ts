@@ -416,14 +416,14 @@ serve(async (req) => {
     let batchCount = 0;
 
     // One shared email: documents going to a deal team, where everyone should
-    // see who else has them and replies stay in one thread. First person in
-    // To, the rest copied. It reads as a one-to-one business email, so it has
+    // see who else has them and replies stay in one thread. Everyone is in To,
+    // so reply-all reaches the whole group. It reads as a business email, so it has
     // no per-person unsubscribe link: one reader clicking it must not opt out
     // the others. Still one message from the verified domain, so DKIM, SPF and
     // DMARC alignment are exactly as for any other send.
     const together = !!campaign.together && recipients.length > 1;
     if (together && recipients.length > 20) {
-      return new Response(JSON.stringify({ error: "One shared email can copy at most 20 people. Send separately, or split the list.", skipped }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "One shared email can go to at most 20 people. Send separately, or split the list.", skipped }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
     }
     if (together) {
       const lead = recipients[0] as any;
@@ -437,8 +437,7 @@ serve(async (req) => {
           from: senderFor(lead),
           ...(replyForRecipient(lead) ? { reply_to: replyForRecipient(lead) } : {}),
           ...(bccList ? { bcc: bccList } : {}),
-          to: [lead.email],
-          cc: (recipients as any[]).slice(1).map((r) => r.email),
+          to: (recipients as any[]).map((r) => r.email),
           subject: merge(campaign.subject, shared),
           html: renderHtml(campaign, shared),
           text: plainText(campaign, shared),
