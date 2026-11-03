@@ -6,6 +6,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const RESEND_FROM = Deno.env.get("RESEND_FROM") || "onboarding@resend.dev";
 const RESEND_FROM_SSP = Deno.env.get("RESEND_FROM_SSP") || ""; // verified SSP-domain sender (strategicsupplypartners.com.au)
+// Replies to SSP outreach go to the shared supply inbox and to Camila, whoever
+// sent it. Comma-separated; SSP_REPLY_TO overrides.
+const SSP_REPLY_TO = (Deno.env.get("SSP_REPLY_TO") || "supply@strategicsupplypartners.com.au,camila@strategicsupplypartners.com.au")
+  .split(",").map((s) => s.trim()).filter(Boolean);
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 // Unsubscribe link shown in the email body. It lives on our own domain: a
@@ -401,7 +405,8 @@ serve(async (req) => {
       const nm = (!forceSeqSender && r && r.fromName) || campaign.fromName || (isSspSend(campaign, r) ? "Strategic Supply Partners" : "Chief Negotiators");
       return fromHeader(nm, addr);
     }
-    function replyForRecipient(r: any) {
+    function replyForRecipient(r: any): string | string[] | undefined {
+      if (isSspSend(campaign, r)) return SSP_REPLY_TO;
       const rt = ((!forceSeqSender && r && r.replyTo) || campaign.replyTo || "sales@thechiefnegotiators.com").trim();
       return rt || undefined;
     }

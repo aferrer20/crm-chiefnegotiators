@@ -24,7 +24,7 @@
 // Brand-aware From: an SSP sequence (brand_key = 'ssp') leaves from the
 // verified SSP domain (RESEND_FROM_SSP) so replies and DKIM line up with the
 // brand; everything else uses RESEND_FROM. The display name is the sequence's
-// from_name when set; reply_to is from_email.
+// from_name when set; reply_to is from_email (SSP: SSP_REPLY_TO).
 // ─────────────────────────────────────────────────────────────────────────
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -32,6 +32,10 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const FROM_EMAIL = Deno.env.get("RESEND_FROM") || "";
 const FROM_EMAIL_SSP = Deno.env.get("RESEND_FROM_SSP") || "";
+// Replies to SSP outreach go to the shared supply inbox and to Camila, whoever
+// sent it. Comma-separated; SSP_REPLY_TO overrides.
+const SSP_REPLY_TO = (Deno.env.get("SSP_REPLY_TO") || "supply@strategicsupplypartners.com.au,camila@strategicsupplypartners.com.au")
+  .split(",").map((s) => s.trim()).filter(Boolean);
 // Same deliverability settings as send-campaign: unsubscribe link on our own
 // domain, postal address in the footer, and a per-UTC-day send cap ("0" = off).
 const UNSUB_PAGE = Deno.env.get("UNSUBSCRIBE_PAGE") || "https://cncrm.thechiefnegotiators.com/unsubscribe.html";
@@ -375,7 +379,7 @@ Deno.serve(async (req) => {
             headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               from: fromHeader,
-              ...(seq.from_email ? { reply_to: seq.from_email } : {}),
+              ...(isSspSeq(seq) ? { reply_to: SSP_REPLY_TO } : seq.from_email ? { reply_to: seq.from_email } : {}),
               to: [contact.email],
               subject: merge(tpl.subject || "", ctx),
               html,
