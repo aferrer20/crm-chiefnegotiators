@@ -2,6 +2,27 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <!-- cn-security-head: GitHub Pages can't send security headers, so the page
+       enforces what it can itself. Upgrade any http:// request to https://,
+       keep full URLs (deal/contact ids) out of Referer headers sent to other
+       sites, and refuse to render inside another site's frame (clickjacking). -->
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <style id="cn-antiframe">html{display:none}</style>
+  <script>
+  (function(){
+    var ok = window.top === window.self;
+    if (!ok) { try { ok = window.top.location.origin === window.location.origin; } catch (e) { ok = false; } }
+    if (ok) { var s = document.getElementById('cn-antiframe'); if (s) s.parentNode.removeChild(s); }
+    else {
+      // Framed by another site: try to break out, and in any case stop the
+      // rest of this document (the app loader) from ever running here.
+      try { window.top.location = window.location.href; } catch (e) {}
+      try { window.stop(); } catch (e) {}
+      document.write('<plaintext style="display:none">');
+    }
+  })();
+  </script>
   <title>CRM Customization · Client Intake</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }

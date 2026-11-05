@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-<meta charset="UTF-8" />
+<meta charset="utf-8">
+  <!-- cn-security-head: GitHub Pages can't send security headers, so the page
+       enforces what it can itself. Upgrade any http:// request to https://,
+       keep full URLs (deal/contact ids) out of Referer headers sent to other
+       sites, and refuse to render inside another site's frame (clickjacking). -->
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <style id="cn-antiframe">html{display:none}</style>
+  <script>
+  (function(){
+    var ok = window.top === window.self;
+    if (!ok) { try { ok = window.top.location.origin === window.location.origin; } catch (e) { ok = false; } }
+    if (ok) { var s = document.getElementById('cn-antiframe'); if (s) s.parentNode.removeChild(s); }
+    else {
+      // Framed by another site: try to break out, and in any case stop the
+      // rest of this document (the app loader) from ever running here.
+      try { window.top.location = window.location.href; } catch (e) {}
+      try { window.stop(); } catch (e) {}
+      document.write('<plaintext style="display:none">');
+    }
+  })();
+  </script>
 <title>Mutual Non-Disclosure &amp; Non-Circumvention Agreement — Chief Negotiators</title>
 <template id="__bundler_thumbnail" data-bg-color="#1A1612"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#1A1612"/><rect x="56" y="40" width="88" height="120" rx="4" fill="#F4EEE3"/><rect x="70" y="60" width="60" height="6" rx="3" fill="#B47148"/><rect x="70" y="78" width="60" height="3.5" rx="1.75" fill="#A89684"/><rect x="70" y="89" width="60" height="3.5" rx="1.75" fill="#A89684"/><text x="100" y="128" text-anchor="middle" font-family="Georgia,serif" font-size="30" font-weight="400" fill="#B47148">CN</text><path d="M72 142h56" stroke="#B47148" stroke-width="2.5"/></svg></template>
 <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
